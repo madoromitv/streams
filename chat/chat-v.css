@@ -1,10 +1,10 @@
-/* MadoromiTV chat — vertical canvas (440 x 440, bottom-left). Same look, a touch larger for phones. */
+/* MadoromiTV chat — vertical canvas (440 x 440, bottom-right). Same look, a touch larger for phones. */
 @import url("chat.css");
 
 :root {
-  --mdr-chat-name: 17px;
-  --mdr-chat-text: 17px;
-  --mdr-chat-line: 1.28;
-  --mdr-chat-gap: 6px;
-  --mdr-chat-pad: 7px 12px 8px 14px;
+  --mdr-chat-name: 15px;
+  --mdr-chat-text: 15px;
+  --mdr-chat-line: 1.26;
+  --mdr-chat-gap: 5px;
+  --mdr-chat-pad: 6px 10px 7px 12px;
 }

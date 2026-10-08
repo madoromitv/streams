@@ -5,11 +5,11 @@
 @import url("../theme/madoromi-theme.css");
 
 :root {
-  --mdr-chat-name: 15px;
-  --mdr-chat-text: 15px;
-  --mdr-chat-line: 1.3;
-  --mdr-chat-gap: 6px;
-  --mdr-chat-pad: 7px 12px 8px 14px;
+  --mdr-chat-name: 13px;
+  --mdr-chat-text: 13px;
+  --mdr-chat-line: 1.28;
+  --mdr-chat-gap: 5px;
+  --mdr-chat-pad: 6px 10px 7px 12px;
 
   /* SSN's own variables */
   --highlight-base: transparent !important;
@@ -38,7 +38,7 @@ body::-webkit-scrollbar, #output::-webkit-scrollbar { display: none; }
   box-shadow: 0 0 24px rgba(130, 5, 179, 0.16) !important;
   margin: 0 6px var(--mdr-chat-gap) 6px !important;
   padding: var(--mdr-chat-pad) !important;
-  display: flex !important;               /* one message per row */
+  display: block !important;              /* one message per row, extras stack underneath */
   width: fit-content !important;          /* card hugs the text */
   max-width: calc(100% - 12px) !important;
   box-sizing: border-box;
@@ -97,7 +97,8 @@ body::-webkit-scrollbar, #output::-webkit-scrollbar { display: none; }
   font-family: var(--mdr-font-semilight) !important;
   font-weight: 400 !important;
   text-shadow: none !important;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;               /* only split words that can't fit at all */
+  word-break: normal !important;
 }
 
 /* Emotes sit nicely in the line */
@@ -110,11 +111,23 @@ body::-webkit-scrollbar, #output::-webkit-scrollbar { display: none; }
   margin: 0 2px !important;
 }
 
-/* Donations / gifts inside chat get a cyan hairline */
+/* Gold, hearts, gifts, memberships: their own line under the message */
+.highlight-chat .donationAmount,
+.highlight-chat .hl-donation,
 .highlight-chat .donation,
-.highlight-chat .hl-donation {
-  color: var(--mdr-there) !important;
+.highlight-chat .membership {
+  display: block !important;
+  float: none !important;
+  margin: 3px 0 0 0 !important;
+  padding: 0 !important;
+  white-space: normal !important;
+  text-align: left !important;
   font-family: var(--mdr-font-semibold) !important;
+  font-size: calc(var(--mdr-chat-text) - 1px) !important;
+  line-height: var(--mdr-chat-line) !important;
+  color: var(--mdr-there) !important;
+  text-shadow: none !important;
+  background: none !important;
 }
 
 /* Hide clutter we never want on stream */
