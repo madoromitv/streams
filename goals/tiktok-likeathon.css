@@ -1,0 +1,131 @@
+/* MadoromiTV — TikFinity Likeathon (top likers)
+   Paste this whole file into the browser source's Custom CSS.
+   Source size: 360 x 420 (vertical canvas). */
+
+:root {
+  --text: rgba(242, 238, 248, 0.92);
+  --dim:  rgba(242, 238, 248, 0.60);
+  --glass1: rgba(20, 14, 31, 0.78);
+  --glass2: rgba(20, 14, 31, 0.62);
+  --edge: rgba(242, 238, 248, 0.08);
+  --magenta: #BE0078;
+  --violet: #8205B3;
+  --cyan: #36D6E7;
+  --threshold: linear-gradient(90deg, #BE0078 0%, #8205B3 50%, #36D6E7 100%);
+  --font: "Segoe UI Semibold", "Segoe UI", sans-serif;
+  --font-light: "Segoe UI Semilight", "Segoe UI", sans-serif;
+}
+
+html, body {
+  margin: 0 !important;
+  background: transparent !important;
+  overflow: hidden !important;
+  font-family: var(--font) !important;
+  color: var(--text) !important;
+  -webkit-font-smoothing: antialiased !important;
+}
+
+/* ---------- one glass row per liker ----------
+   TikFinity doesn't give rows a stable class, so we style
+   whatever element directly holds the rank + username. */
+:where(div, li):has(> .rankId):has(> .username),
+:where(div, li):has(> .rankId):has(> * .username) {
+  position: relative !important;
+  box-sizing: border-box !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  margin: 0 0 8px 0 !important;
+  padding: 10px 16px 10px 14px !important;
+  border-radius: 12px !important;
+  background: linear-gradient(180deg, var(--glass1), var(--glass2)) !important;
+  box-shadow: inset 0 0 0 1px var(--edge), 0 0 22px rgba(130, 5, 179, 0.16) !important;
+  border: none !important;
+  overflow: hidden !important;
+}
+/* rail on each row */
+:where(div, li):has(> .rankId):has(> .username)::before,
+:where(div, li):has(> .rankId):has(> * .username)::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 10px; bottom: 10px;
+  width: 2px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, transparent, var(--magenta) 25%, var(--cyan) 75%, transparent);
+}
+
+/* ---------- rank number ---------- */
+.rankId {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex: 0 0 auto !important;
+  min-width: 28px !important;
+  height: auto !important;
+  width: auto !important;
+  transform: none !important;
+  background: none !important;
+  border: none !important;
+  font-family: var(--font-light) !important;
+  font-size: 20px !important;
+  color: var(--dim) !important;
+}
+.rankId * { display: inline !important; background: none !important; color: inherit !important; }
+
+/* top three ranks get the brand colours */
+:where(div, li):nth-child(1) > .rankId { color: var(--magenta) !important; font-family: var(--font) !important; }
+:where(div, li):nth-child(2) > .rankId { color: var(--violet) !important;  font-family: var(--font) !important; }
+:where(div, li):nth-child(3) > .rankId { color: var(--cyan) !important;    font-family: var(--font) !important; }
+
+/* ---------- avatar ---------- */
+:where(div, li):has(> .rankId) img:not(.heartIcon) {
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 50% !important;
+  box-shadow: 0 0 0 1px var(--edge) !important;
+  object-fit: cover !important;
+}
+
+/* ---------- name + points ---------- */
+.username {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  font-family: var(--font) !important;
+  font-size: 20px !important;
+  font-weight: 600 !important;
+  line-height: 1.1 !important;
+  color: var(--text) !important;
+  text-shadow: none !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.points {
+  flex: 0 0 auto !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  font-family: var(--font-light) !important;
+  font-size: 18px !important;
+  line-height: 1.1 !important;
+  color: var(--dim) !important;
+  text-shadow: none !important;
+}
+.points span {
+  font-family: var(--font) !important;
+  font-size: 19px !important;
+  background: var(--threshold) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  color: transparent !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+/* heart icon in pale, not TikTok red */
+.heartIcon {
+  width: 15px !important;
+  height: 15px !important;
+  filter: brightness(0) invert(0.93) !important;
+  opacity: 0.7 !important;
+}

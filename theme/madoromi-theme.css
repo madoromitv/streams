@@ -1,0 +1,65 @@
+/* MadoromiTV — shared design tokens
+   Everything else (alerts, chat, goals) imports this file,
+   so a colour change here updates every overlay at once. */
+
+:root {
+  /* Palette */
+  --mdr-night:   #0B0812;              /* deepest background */
+  --mdr-surface: #140E1F;              /* deep glass */
+  --mdr-here:    #BE0078;              /* waking magenta */
+  --mdr-bridge:  #8205B3;              /* dusk violet */
+  --mdr-there:   #36D6E7;              /* dream cyan */
+  --mdr-text:    rgba(242, 238, 248, 0.92);  /* pale */
+  --mdr-dim:     rgba(242, 238, 248, 0.60);  /* pale, dim */
+
+  /* Glass */
+  --mdr-glass1: rgba(20, 14, 31, 0.78);
+  --mdr-glass2: rgba(20, 14, 31, 0.62);
+  --mdr-edge:   rgba(242, 238, 248, 0.08);  /* hairline border */
+  --mdr-glow:   0 0 40px rgba(130, 5, 179, 0.22);
+  --mdr-threshold: linear-gradient(90deg, #BE0078 0%, #8205B3 50%, #36D6E7 100%);
+  --mdr-rail:      linear-gradient(180deg, rgba(190,0,120,0) 0%, #BE0078 25%, #36D6E7 75%, rgba(54,214,231,0) 100%);
+
+  /* Shape + type */
+  --mdr-radius: 24px;
+  --mdr-radius-sm: 12px;
+  --mdr-font: "Segoe UI", "Segoe UI Variable Text", system-ui, sans-serif;
+  --mdr-font-light: "Segoe UI Light", "Segoe UI", system-ui, sans-serif;
+  --mdr-font-semilight: "Segoe UI Semilight", "Segoe UI", system-ui, sans-serif;
+  --mdr-font-semibold: "Segoe UI Semibold", "Segoe UI", system-ui, sans-serif;
+  --mdr-font-jp: "Yu Gothic UI Light", "Yu Gothic UI", "Meiryo", sans-serif;
+
+  /* Motion */
+  --mdr-ease-in:  cubic-bezier(0.16, 1, 0.3, 1);   /* drift in */
+  --mdr-ease-out: cubic-bezier(0.7, 0, 0.84, 0);   /* drift away */
+}
+
+/* Reusable glass panel: dark glass, hairline edge, violet haze, magenta→cyan rail */
+.mdr-glass {
+  position: relative;
+  background: linear-gradient(180deg, var(--mdr-glass1), var(--mdr-glass2));
+  border: 1px solid var(--mdr-edge);
+  border-radius: var(--mdr-radius);
+  box-shadow: var(--mdr-glow);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+.mdr-glass::before {
+  content: "";
+  position: absolute;
+  left: -1px;
+  top: var(--mdr-radius);
+  bottom: var(--mdr-radius);
+  width: 3px;
+  border-radius: 2px;
+  background: var(--mdr-rail);
+  box-shadow: 0 0 16px rgba(130, 5, 179, 0.5);
+}
+
+/* Gradient text (names, highlights) */
+.mdr-threshold-text {
+  background: var(--mdr-threshold);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}

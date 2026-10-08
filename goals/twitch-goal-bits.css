@@ -1,0 +1,148 @@
+/* MadoromiTV — Twitch goal widget (Bits: cyan-led)
+   Paste this whole file into the browser source's Custom CSS.
+   Source size: 380 x 96. Only the --accent lines differ between Subs, Bits and Follows. */
+
+:root {
+  --accent-a: #36D6E7;          /* rail + number start */
+  --accent-b: #8205B3;          /* rail + number end   */
+  --accent-glow: rgba(54, 214, 231, 0.35);
+
+  --text: rgba(242, 238, 248, 0.92);
+  --dim:  rgba(242, 238, 248, 0.60);
+  --glass1: rgba(20, 14, 31, 0.78);
+  --glass2: rgba(20, 14, 31, 0.62);
+  --edge: rgba(242, 238, 248, 0.08);
+  --threshold: linear-gradient(90deg, #BE0078 0%, #8205B3 50%, #36D6E7 100%);
+  --radius: 12px;
+  --font: "Segoe UI Semibold", "Segoe UI", sans-serif;
+}
+
+/* ---------- card ---------- */
+html, body {
+  width: 100% !important; height: 100% !important;
+  margin: 0 !important; padding: 0 !important;
+  overflow: hidden !important;
+  background: transparent !important;
+  font-family: var(--font) !important;
+  color: var(--text) !important;
+  -webkit-font-smoothing: antialiased !important;
+}
+/* rail, tinted per goal */
+.goal_widget_v2__container::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 12px; bottom: 12px;
+  width: 3px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, transparent 0%, var(--accent-a) 25%, var(--accent-b) 75%, transparent 100%);
+  box-shadow: 0 0 14px var(--accent-glow);
+  z-index: 10;
+}
+
+/* ---------- strip Twitch's own panel ---------- */
+.goal_widget_v2__container {
+  position: relative !important;
+  box-sizing: border-box !important;
+  width: 100% !important; height: 100% !important;
+  padding: 14px 18px 16px 20px !important;
+  border: none !important; outline: none !important;
+  border-radius: var(--radius) !important;
+  background: linear-gradient(180deg, var(--glass1), var(--glass2)) !important;
+  box-shadow: inset 0 0 0 1px var(--edge), 0 0 28px rgba(130, 5, 179, 0.18) !important;
+  overflow: hidden !important;
+  display: grid !important;
+  grid-template-rows: auto auto !important;
+  row-gap: 12px !important;
+  align-content: center !important;
+  --color-background-progress: rgba(242, 238, 248, 0.10) !important;
+}
+.goal_widget_v2__container[style*="border"] { border: none !important; }
+.kDyOoU, .fThMQN, .jdqlJl, .ja-DvyE, .tw-root--theme-dark {
+  background: transparent !important; background-image: none !important;
+  border: none !important; box-shadow: none !important;
+}
+.goal_widget_v2__contribution_type { display: none !important; }
+
+/* ---------- header: icon · title · count ---------- */
+.goal_widget_v2__container .tdjWX {
+  display: grid !important;
+  grid-template-columns: auto 1fr auto !important;
+  align-items: center !important;
+  column-gap: 10px !important;
+  width: 100% !important;
+  padding: 0 !important;
+  transform: none !important;
+}
+.goal_widget_v2__container .tdjWX svg {
+  width: 22px !important; height: 22px !important;
+  opacity: 0.6 !important;
+  filter: none !important;
+}
+.goal_widget_v2__container .tdjWX svg * { fill: var(--text) !important; }
+
+.goal_widget_v2__description,
+p.CoreText-sc-1txzju1-0.goal_widget_v2__description {
+  margin: 0 !important;
+  text-align: left !important;
+  justify-self: start !important;
+  font-family: var(--font) !important;
+  font-size: 22px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.025em !important;
+  line-height: 1.1 !important;
+  color: var(--text) !important;
+  white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important;
+}
+.goal_widget_v2__progress,
+p.CoreText-sc-1txzju1-0.goal_widget_v2__progress {
+  margin: 0 !important; padding: 0 !important;
+  justify-self: end !important;
+  transform: none !important;
+  font-family: var(--font) !important;
+  font-size: 24px !important;
+  font-weight: 600 !important;
+  line-height: 1.1 !important;
+  white-space: nowrap !important;
+}
+.goal_widget_v2__description *, .goal_widget_v2__progress * {
+  font-size: inherit !important; line-height: inherit !important; font-weight: inherit !important;
+}
+/* " / 10" in dim pale */
+.goal_widget_v2__progress span {
+  color: var(--dim) !important;
+  -webkit-text-fill-color: var(--dim) !important;
+}
+/* the live number in the accent gradient */
+.goal_widget_v2__progress span span {
+  background: linear-gradient(90deg, var(--accent-a), var(--accent-b)) !important;
+  -webkit-background-clip: text !important; background-clip: text !important;
+  color: transparent !important; -webkit-text-fill-color: transparent !important;
+  text-shadow: none !important;
+}
+
+/* ---------- bar ---------- */
+div[role="progressbar"] {
+  width: 100% !important;
+  margin: 0 !important;
+  height: 8px !important;
+  border-radius: 999px !important;
+  overflow: hidden !important;
+  background: rgba(242, 238, 248, 0.10) !important;
+  border: none !important;
+  box-shadow: inset 0 0 0 1px rgba(242, 238, 248, 0.06) !important;
+  position: relative !important;
+}
+div[role="progressbar"] .eFBvNv, div[role="progressbar"] .dqtoSi { display: none !important; }  /* tick dots */
+div[role="progressbar"] .dbGRQN {
+  height: 100% !important;
+  background: transparent !important;
+  overflow: visible !important;
+  filter: none !important;
+}
+div[role="progressbar"] .idutqe {
+  height: 100% !important;
+  border-radius: 999px !important;
+  background: var(--threshold) !important;
+  background-size: 380px 100% !important;   /* gradient spans the full bar, revealed as it fills */
+  box-shadow: 0 0 12px var(--accent-glow) !important;
+}

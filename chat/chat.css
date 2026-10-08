@@ -1,0 +1,119 @@
+/* MadoromiTV chat — Social Stream Ninja dock.html theme
+   Load it by adding  &css=https://madoromitv.github.io/streams/chat/chat.css  to the SSN URL.
+   Horizontal canvas (400 x 615). chat-v.css bumps sizes for the vertical canvas. */
+
+@import url("../theme/madoromi-theme.css");
+
+:root {
+  --mdr-chat-name: 19px;
+  --mdr-chat-text: 19px;
+  --mdr-chat-gap: 8px;
+  --mdr-chat-pad: 10px 14px 11px 16px;
+
+  /* SSN's own variables */
+  --highlight-base: transparent !important;
+  --highlight-base2: transparent !important;
+  --highlight-compact: transparent !important;
+  --highlight-compact2: transparent !important;
+  --comment-font-size: var(--mdr-chat-text) !important;
+  --author-font-size: var(--mdr-chat-name) !important;
+}
+
+html, body, #main, #output {
+  background: transparent !important;
+  font-family: var(--mdr-font-semilight) !important;
+  overflow: hidden !important;
+}
+#output { margin-bottom: 0 !important; }
+#menu { display: none !important; }        /* the dock's button bar, never needed on stream */
+body::-webkit-scrollbar, #output::-webkit-scrollbar { display: none; }
+
+/* One glass card per message */
+.highlight-chat {
+  position: relative;
+  background: linear-gradient(180deg, var(--mdr-glass1), var(--mdr-glass2)) !important;
+  border: 1px solid var(--mdr-edge) !important;
+  border-radius: var(--mdr-radius-sm) !important;
+  box-shadow: 0 0 24px rgba(130, 5, 179, 0.16) !important;
+  margin: 0 6px var(--mdr-chat-gap) 6px !important;
+  padding: var(--mdr-chat-pad) !important;
+  display: flex !important;               /* one message per row */
+  width: fit-content !important;          /* card hugs the text */
+  max-width: calc(100% - 12px) !important;
+  box-sizing: border-box;
+  animation: mdrDrift 0.6s var(--mdr-ease-in) both;
+  contain: none !important;
+}
+.highlight-chat:hover { box-shadow: 0 0 24px rgba(130, 5, 179, 0.16) !important; }
+
+/* magenta → cyan rail on the left edge, like the glass panels */
+.highlight-chat::before {
+  content: "";
+  position: absolute;
+  left: -1px;
+  top: 10px;
+  bottom: 10px;
+  width: 2px;
+  border-radius: 2px;
+  background: var(--mdr-rail);
+}
+
+.highlight-chat .hl-message {
+  background: transparent !important;
+  color: var(--mdr-text) !important;
+  font-family: var(--mdr-font-semilight) !important;
+  font-size: var(--mdr-chat-text) !important;
+  line-height: 1.38 !important;
+  padding: 0 !important;
+  display: block !important;
+}
+
+/* Name: threshold gradient, small caps-ish spacing, on its own line */
+.highlight-chat .hl-name {
+  display: block !important;
+  width: fit-content !important;
+  margin: 0 0 2px 0 !important;
+  font-family: var(--mdr-font-semibold) !important;
+  font-weight: 600 !important;
+  font-size: var(--mdr-chat-name) !important;
+  letter-spacing: 0.02em;
+  background: var(--mdr-threshold) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  color: transparent !important;          /* overrides per-user Twitch colours */
+  text-shadow: none !important;
+}
+.highlight-chat .hl-name::after { content: none !important; }  /* no ":" */
+
+.highlight-chat .hl-content {
+  color: var(--mdr-text) !important;
+  font-family: var(--mdr-font-semilight) !important;
+  font-weight: 400 !important;
+  text-shadow: none !important;
+  overflow-wrap: anywhere;
+}
+
+/* Emotes sit nicely in the line */
+.highlight-chat .hl-content img,
+.highlight-chat .hl-message img {
+  height: 1.5em !important;
+  max-height: 1.5em !important;
+  max-width: none !important;
+  vertical-align: middle !important;
+  margin: 0 2px !important;
+}
+
+/* Donations / gifts inside chat get a cyan hairline */
+.highlight-chat .donation,
+.highlight-chat .hl-donation {
+  color: var(--mdr-there) !important;
+  font-family: var(--mdr-font-semibold) !important;
+}
+
+/* Hide clutter we never want on stream */
+.queueid, .hl-badges, .source-name, .time-arrived { display: none !important; }
+
+@keyframes mdrDrift {
+  from { opacity: 0; transform: translateY(10px); filter: blur(6px); }
+  to   { opacity: 1; transform: none;            filter: blur(0); }
+}

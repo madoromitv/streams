@@ -1,0 +1,152 @@
+/* MadoromiTV alert
+   Designed at 1520 x 855 (the horizontal game area). alert.js scales the
+   whole stage to fit whatever size the OBS browser source is, so the same
+   page works on the vertical canvas too. Total runtime: 10 s (same as Ashen). */
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: transparent;
+}
+
+#stage {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 1520px;
+  height: 855px;
+  transform: translate(-50%, -50%) scale(var(--fit, 1));
+  transform-origin: center center;
+  pointer-events: none;
+}
+
+/* ---------- Burst ---------- */
+#burst {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+}
+body.playing #burst { opacity: 0.9; }
+
+/* ---------- Card ---------- */
+#card {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 820px;
+  box-sizing: border-box;
+  padding: 34px 64px 30px;
+  text-align: center;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  color: var(--mdr-text);
+  font-family: var(--mdr-font);
+}
+
+body.playing #card {
+  animation: cardLife 10s linear forwards, breathe 5s ease-in-out 1s infinite;
+}
+
+/* 0–0.9 s drift in, hold, 9.0–9.9 s drift away */
+@keyframes cardLife {
+  0%    { opacity: 0; filter: blur(10px); transform: translate(-50%, -46%) scale(0.97); }
+  9%    { opacity: 1; filter: blur(0);    transform: translate(-50%, -50%) scale(1); }
+  90%   { opacity: 1; filter: blur(0);    transform: translate(-50%, -50%) scale(1); }
+  99%   { opacity: 0; filter: blur(8px);  transform: translate(-50%, -53%) scale(1.01); }
+  100%  { opacity: 0; }
+}
+
+/* Same 5 s breathing as the holding-screen glass */
+@keyframes breathe {
+  0%, 100% { box-shadow: 0 0 40px rgba(130, 5, 179, 0.22); }
+  50%      { box-shadow: 0 0 64px rgba(130, 5, 179, 0.40), 0 0 24px rgba(54, 214, 231, 0.10); }
+}
+
+/* ---------- Text lines ---------- */
+#kanji, #title, #user, #sub, #via {
+  opacity: 0;
+}
+body.playing #kanji, body.playing #title, body.playing #user,
+body.playing #sub, body.playing #via {
+  animation: lineIn 0.9s var(--mdr-ease-in) forwards;
+}
+body.playing #kanji { animation-delay: 0.20s; }
+body.playing #title { animation-delay: 0.35s; }
+body.playing #user  { animation-delay: 0.50s; }
+body.playing #sub   { animation-delay: 0.65s; }
+body.playing #via   { animation-delay: 0.80s; }
+
+@keyframes lineIn {
+  from { opacity: 0; transform: translateY(8px); filter: blur(6px); }
+  to   { opacity: var(--o, 1); transform: none; filter: blur(0); }
+}
+
+#kanji {
+  --o: 0.6;
+  font-family: var(--mdr-font-jp);
+  font-size: 22px;
+  letter-spacing: 0.3em;
+  margin-bottom: 10px;
+}
+
+#title {
+  --o: 0.92;
+  font-family: var(--mdr-font-light);
+  font-weight: 300;
+  font-size: 40px;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  /* letter-spacing adds space after the last letter; pull it back so it centres */
+  margin-right: -0.32em;
+}
+
+#user {
+  display: inline-block;   /* so the gradient spans the name, not the card */
+  max-width: 100%;
+  white-space: nowrap;     /* alert.js shrinks long names to fit one line */
+  margin-top: 12px;
+  font-family: var(--mdr-font-semibold);
+  font-weight: 600;
+  font-size: 64px;
+  line-height: 1.15;
+  padding: 0 4px 4px;
+  filter: drop-shadow(0 0 18px rgba(130, 5, 179, 0.35));
+}
+
+#sub {
+  --o: 0.75;
+  margin-top: 8px;
+  font-family: var(--mdr-font-semilight);
+  font-size: 26px;
+  letter-spacing: 0.14em;
+  text-transform: lowercase;
+}
+#sub:empty { display: none; }
+
+#via {
+  --o: 0.6;
+  margin-top: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-family: var(--mdr-font-semilight);
+  font-size: 18px;
+  letter-spacing: 0.24em;
+  text-transform: lowercase;
+}
+#via.hidden { display: none; }
+#viaIcon { height: 20px; width: auto; }
+#viaIcon[src=""] { display: none; }
+
+/* Big moments get a stronger glow */
+body.big #card { border-color: rgba(54, 214, 231, 0.18); }
+
+/* Very long names that can't fit even at the smallest size wrap instead */
+#user.wrap { white-space: normal; overflow-wrap: anywhere; }

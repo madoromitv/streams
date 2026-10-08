@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>MadoromiTV Alert</title>
+  <link rel="stylesheet" href="../theme/madoromi-theme.css" />
+  <link rel="stylesheet" href="alert.css" />
+</head>
+<body>
+  <div id="stage">
+    <!-- Static burst behind the card (light / medium / heavy, picked per event) -->
+    <video id="burst" muted playsinline preload="auto"></video>
+
+    <div id="card" class="mdr-glass">
+      <div id="kanji">微睡み</div>
+      <div id="title"></div>
+      <div id="user" class="mdr-threshold-text"></div>
+      <div id="sub"></div>
+      <div id="via"><img id="viaIcon" alt="" /><span id="viaText"></span></div>
+    </div>
+  </div>
+
+  <script src="alert.js"></script>
+</body>
+</html>

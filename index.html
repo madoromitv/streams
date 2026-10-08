@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MadoromiTV overlays</title>
+  <link rel="stylesheet" href="theme/madoromi-theme.css" />
+  <style>
+    body { margin: 0; min-height: 100vh; background: var(--mdr-night); color: var(--mdr-text);
+           font-family: var(--mdr-font-semilight); display: grid; place-items: center; padding: 24px; box-sizing: border-box; }
+    main { width: min(720px, 100%); padding: 32px 40px; box-sizing: border-box; }
+    h1 { font-family: var(--mdr-font-light); font-weight: 300; letter-spacing: .3em; font-size: 28px; margin: 0 0 4px; }
+    .jp { font-family: var(--mdr-font-jp); color: var(--mdr-dim); letter-spacing: .3em; }
+    h2 { font-size: 15px; letter-spacing: .2em; text-transform: uppercase; color: var(--mdr-dim); margin: 28px 0 10px; font-weight: 400; }
+    a { color: var(--mdr-there); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    li { margin: 6px 0; }
+    code { color: var(--mdr-dim); font-size: 13px; }
+  </style>
+</head>
+<body>
+  <main class="mdr-glass">
+    <div class="jp">微睡み</div>
+    <h1>MADOROMITV</h1>
+    <p>Overlay pages for OBS. Open a test link to preview an alert (10 seconds, then it clears).</p>
+
+    <h2>Alert tests</h2>
+    <ul>
+      <li><a href="alerts/alert.html#alertType=TwitchFollow&platform=twitch&userName=SleepyKitsune">Twitch follow</a> <code>light burst</code></li>
+      <li><a href="alerts/alert.html#alertType=TwitchSub&platform=twitch&userName=Moogle&tier=1">Twitch sub</a></li>
+      <li><a href="alerts/alert.html#alertType=TwitchCheer&platform=twitch&userName=rin&bits=500">Twitch cheer</a></li>
+      <li><a href="alerts/alert.html#alertType=TwitchGiftSub&platform=twitch&userName=yume&recipient=Moogle&tier=1">Twitch gift sub</a></li>
+      <li><a href="alerts/alert.html#alertType=TwitchGiftBomb&platform=twitch&userName=SleepyKitsune&gifts=10&tier=1">Twitch gift bomb</a> <code>heavy burst</code></li>
+      <li><a href="alerts/alert.html#alertType=TwitchRewardRedemption&platform=twitch&userName=rin&reward=Hydrate&cost=500">Channel points</a></li>
+      <li><a href="alerts/alert.html#alertType=TwitchRaid&platform=twitch&userName=AnotherStreamer&viewers=42">Twitch raid</a> <code>heavy burst</code></li>
+      <li><a href="alerts/alert.html#alertType=TTFollow&platform=tiktok&nickname=yume">TikTok follow</a></li>
+      <li><a href="alerts/alert.html#alertType=TTGift&platform=tiktok&nickname=Rin&giftName=Rose&coins=1&repeatCount=5">TikTok gift</a></li>
+      <li><a href="alerts/alert.html#alertType=TTSub&platform=tiktok&nickname=yume&subMonth=3">TikTok sub</a></li>
+    </ul>
+
+    <h2>Files</h2>
+    <ul>
+      <li><code>theme/madoromi-theme.css</code> shared colours, glass, fonts</li>
+      <li><code>alerts/alert.html</code> Streamer.bot alert page</li>
+      <li><code>goals/*.css</code> Twitch and TikFinity goal styles (paste into OBS Custom CSS)</li>
+      <li><code>chat/chat.css</code> / <code>chat/chat-v.css</code> Social Stream Ninja theme</li>
+    </ul>
+  </main>
+</body>
+</html>
