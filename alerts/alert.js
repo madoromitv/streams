@@ -7,12 +7,24 @@
    New, optional:
      viewers  (TwitchRaid)
      burst    (light | medium | heavy | none) to override the automatic pick
+     sound    (light | medium | heavy | none) to override the sound (defaults to the burst tier)
+   Page option (before the #):  alert.html?silent  → no sound (use on the vertical copy,
+   so the shared audio mix only hears one alert).
 */
 
 (function () {
   "use strict";
 
   const ALERT_MS = 10000; // keep in step with the Streamer.bot wait
+  const SILENT = new URLSearchParams(window.location.search).has("silent");
+  const SOUND_VOLUME = 0.8;
+  const sounds = {};
+  ["light", "medium", "heavy"].forEach((k) => {
+    const a = new Audio(`media/sfx-${k}.ogg`);
+    a.preload = "auto";
+    a.volume = SOUND_VOLUME;
+    sounds[k] = a;
+  });
 
   // ---------- Copy ----------
   const TITLES = {
@@ -184,6 +196,14 @@
     }
 
     fitName(burst === "heavy" ? 72 : 64);
+
+    // sound
+    const soundTier = (g("sound").toLowerCase() || burst);
+    if (!SILENT && sounds[soundTier]) {
+      const a = sounds[soundTier];
+      a.currentTime = 0;
+      a.play().catch(() => {});
+    }
 
     // restart CSS animations
     void document.body.offsetWidth;
