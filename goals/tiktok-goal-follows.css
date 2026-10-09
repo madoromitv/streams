@@ -1,48 +1,41 @@
 /* MadoromiTV — TikFinity goal widget (Follows: violet-led)
    Paste this whole file into the browser source's Custom CSS.
-   Source size: 504 x 96. Works with both TikFinity goal styles (legacy and own3d). */
+   Source size: 504 x 96. Built against TikFinity's legacy goal markup. */
 
 :root {
   --accent-a: #8205B3;
   --accent-b: #BE0078;
   --accent-glow: rgba(130, 5, 179, 0.45);
-
   --text: rgba(242, 238, 248, 0.92);
-  --dim:  rgba(242, 238, 248, 0.60);
   --glass1: rgba(20, 14, 31, 0.78);
   --glass2: rgba(20, 14, 31, 0.62);
   --edge: rgba(242, 238, 248, 0.08);
   --threshold: linear-gradient(90deg, #BE0078 0%, #8205B3 50%, #36D6E7 100%);
-  --radius: 12px;
   --font: "Segoe UI Semibold", "Segoe UI", sans-serif;
 }
 
-html, body {
+html, html body {
   width: 100% !important; height: 100% !important;
   margin: 0 !important; padding: 0 !important;
   overflow: hidden !important;
   background: transparent !important;
-  font-family: var(--font) !important;
-  color: var(--text) !important;
+  font-family: var(--font) !important;   /* TikFinity sets Exo 2 inline */
+  line-height: 1.2 !important;
   -webkit-font-smoothing: antialiased !important;
 }
 
 /* ---------- card ---------- */
-.widget {
+.widget.legacy {
   position: relative !important;
   box-sizing: border-box !important;
   width: 100% !important; height: 100% !important;
   padding: 14px 18px 16px 20px !important;
-  border-radius: var(--radius) !important;
+  border-radius: 12px !important;
   background: linear-gradient(180deg, var(--glass1), var(--glass2)) !important;
   box-shadow: inset 0 0 0 1px var(--edge), 0 0 28px rgba(130, 5, 179, 0.18) !important;
   overflow: hidden !important;
-  display: flex !important;
-  flex-direction: column !important;
-  justify-content: center !important;
-  gap: 12px !important;
 }
-.widget::before {
+.widget.legacy::before {
   content: "";
   position: absolute;
   left: 0; top: 12px; bottom: 12px;
@@ -53,87 +46,75 @@ html, body {
   z-index: 10;
 }
 
-/* strip TikFinity's grey slabs */
-.widget .background.progressContainer,
-.widget .background.textContainer,
-.widget .goalContainer {
-  background: transparent !important;
-  box-shadow: none !important;
-  border: none !important;
-  filter: none !important;
-  padding: 0 !important;
+/* no slant (TikFinity's "parallelogram" skew), title above bar */
+.widget.legacy .goalContainer {
+  transform: none !important;
+  width: 100% !important;
   margin: 0 !important;
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  gap: 12px !important;
+  align-items: stretch !important;
+  text-align: left !important;
+}
+.widget.legacy .textContainer   { order: 1 !important; }
+.widget.legacy .progressContainer { order: 2 !important; }
+
+/* strip the coloured slabs */
+.widget.legacy .background {
+  background: transparent !important;
+  filter: none !important;
+}
+.widget.legacy .textContainer {
+  display: block !important;
+  width: auto !important;
+  padding: 0 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+}
+.widget.legacy .progressContainer {
+  width: 100% !important;
+  height: 8px !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* ---------- text ---------- */
+.widget.legacy .font,
+.widget.legacy .goalText {
+  transform: none !important;
+  font-family: var(--font) !important;
+  font-size: 22px !important;
+  font-weight: 600 !important;
+  font-style: normal !important;
+  letter-spacing: 0.025em !important;
+  line-height: 1.2 !important;
+  color: var(--text) !important;
+  text-shadow: none !important;
+  text-overflow: ellipsis !important;
+  overflow: hidden !important;
 }
 
 /* ---------- bar ---------- */
-.widget .progressBar {
+.widget.legacy .progressBar {
+  position: relative !important;
+  width: 100% !important;
   height: 8px !important;
   border-radius: 999px !important;
   overflow: hidden !important;
   background: rgba(242, 238, 248, 0.10) !important;
-  border: none !important;
   box-shadow: inset 0 0 0 1px rgba(242, 238, 248, 0.06) !important;
 }
-.widget .progressBarProgress {
+.widget.legacy .progressBarProgress {
   height: 100% !important;
   border-radius: 999px !important;
   background: var(--threshold) !important;
-  background-size: 470px 100% !important;
+  background-size: 466px 100% !important;   /* gradient spans the whole bar, revealed as it fills */
   box-shadow: 0 0 12px var(--accent-glow) !important;
 }
-.widget .progressBarProgressPercent { display: none !important; }
+.widget.legacy .progressBarProgressPercent { display: none !important; }
 
-/* ---------- text ---------- */
-.widget.legacy .goalText,
-.widget.own3d .progressBarTitle {
-  color: var(--text) !important;
-  font-family: var(--font) !important;
-  font-size: 22px !important;
-  font-weight: 600 !important;
-  letter-spacing: 0.025em !important;
-  line-height: 1.1 !important;
-  text-align: left !important;
-  transform: none !important;
-  white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important;
-}
-.widget.own3d .progressBarTextContainer { transform: none !important; }
-.widget.own3d .progressBarProgressCurrentProgress,
-.widget.own3d .progressBarProgressGoal {
-  font-family: var(--font) !important;
-  font-size: 24px !important;
-  font-weight: 600 !important;
-  line-height: 1.1 !important;
-  transform: none !important;
-  text-shadow: none !important;
-}
-.widget.own3d .progressBarProgressGoal {
-  color: var(--dim) !important; -webkit-text-fill-color: var(--dim) !important;
-}
-.widget.own3d .progressBarProgressCurrentProgress {
-  background: linear-gradient(90deg, var(--accent-a), var(--accent-b)) !important;
-  -webkit-background-clip: text !important; background-clip: text !important;
-  color: transparent !important; -webkit-text-fill-color: transparent !important;
-}
-
-/* ---------- TikFinity inline-style overrides ---------- */
-.widget, .widget * { font-style: normal !important; }      /* TikFinity italicises its text */
-.widget .textContainer,
-.widget .textContainer *,
-.widget .goalText * {
-  font-family: var(--font) !important;
-  font-size: 22px !important;
-  font-weight: 600 !important;
-  letter-spacing: 0.025em !important;
-  line-height: 1.1 !important;
-  color: var(--text) !important;
-  text-shadow: none !important;
-  transform: none !important;
-}
-/* title above the bar, not below it */
-.widget .textContainer { order: -1 !important; }
-.widget .goalContainer,
-.widget > div:not(.textContainer):not(.progressContainer) {
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 12px !important;
-}
+/* goal-reached animations: keep the shake, drop the flip */
+.widget.flip { animation: none !important; }

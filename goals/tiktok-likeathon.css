@@ -1,6 +1,6 @@
 /* MadoromiTV — TikFinity Likeathon (top likers)
    Paste this whole file into the browser source's Custom CSS.
-   Source size: 360 x 420 (vertical canvas). */
+   Source size: 360 x 420. Shows the top 6; built against TikFinity's real markup. */
 
 :root {
   --text: rgba(242, 238, 248, 0.92);
@@ -16,116 +16,113 @@
   --font-light: "Segoe UI Semilight", "Segoe UI", sans-serif;
 }
 
-html, body {
+html, html body {
   margin: 0 !important;
+  padding: 0 !important;
   background: transparent !important;
   overflow: hidden !important;
-  font-family: var(--font) !important;
-  color: var(--text) !important;
+  font-family: var(--font) !important;   /* TikFinity sets Exo 2 inline */
   -webkit-font-smoothing: antialiased !important;
 }
+#rankingContainer {
+  width: 100% !important;
+  height: 100% !important;
+  padding: 2px 0 0 0 !important;
+  box-sizing: border-box !important;
+}
 
-/* ---------- one glass row per liker ----------
-   TikFinity doesn't give rows a stable class, so we style
-   whatever element directly holds the rank + username. */
-:where(div, li):has(> .rankId):has(> .username),
-:where(div, li):has(> .rankId):has(> * .username) {
+/* ---------- only the top 6 ---------- */
+#rankingContainer .rankUser:nth-child(n+7) { display: none !important; }
+
+/* ---------- one glass row per liker ---------- */
+#rankingContainer .rankUser {
   position: relative !important;
   box-sizing: border-box !important;
-  display: flex !important;
-  align-items: center !important;
-  gap: 12px !important;
+  width: 100% !important;
   margin: 0 0 8px 0 !important;
-  padding: 10px 16px 10px 14px !important;
+  padding: 7px 14px 7px 12px !important;
   border-radius: 12px !important;
   background: linear-gradient(180deg, var(--glass1), var(--glass2)) !important;
-  box-shadow: inset 0 0 0 1px var(--edge), 0 0 22px rgba(130, 5, 179, 0.16) !important;
-  border: none !important;
+  box-shadow: inset 0 0 0 1px var(--edge), 0 0 20px rgba(130, 5, 179, 0.14) !important;
   overflow: hidden !important;
 }
-/* rail on each row */
-:where(div, li):has(> .rankId):has(> .username)::before,
-:where(div, li):has(> .rankId):has(> * .username)::before {
+#rankingContainer .rankUser::before {
   content: "";
   position: absolute;
   left: 0; top: 10px; bottom: 10px;
   width: 2px;
   border-radius: 2px;
-  background: linear-gradient(180deg, transparent, var(--magenta) 25%, var(--cyan) 75%, transparent);
+  background: linear-gradient(180deg, transparent, var(--violet) 30%, var(--violet) 70%, transparent);
 }
+/* top three: brand-coloured rails */
+#rankingContainer .rankUser:nth-child(1)::before { background: linear-gradient(180deg, transparent, var(--magenta) 25%, var(--cyan) 75%, transparent); box-shadow: 0 0 12px rgba(190, 0, 120, 0.5); }
+#rankingContainer .rankUser:nth-child(2)::before { background: linear-gradient(180deg, transparent, var(--magenta) 30%, var(--magenta) 70%, transparent); }
+#rankingContainer .rankUser:nth-child(3)::before { background: linear-gradient(180deg, transparent, var(--cyan) 30%, var(--cyan) 70%, transparent); }
 
-/* ---------- rank number ---------- */
-.rankId {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  flex: 0 0 auto !important;
-  min-width: 28px !important;
-  height: auto !important;
-  width: auto !important;
-  transform: none !important;
-  background: none !important;
-  border: none !important;
+#rankingContainer .rankUser table { border-collapse: collapse !important; }
+#rankingContainer .rankUser td { vertical-align: middle !important; padding: 0 !important; }
+
+/* rank number (shows if "Show Rank" is ticked in TikFinity) */
+#rankingContainer .rankId {
+  width: 26px !important;
+  padding-right: 6px !important;
   font-family: var(--font-light) !important;
-  font-size: 20px !important;
+  font-size: 18px !important;
+  font-weight: 400 !important;
   color: var(--dim) !important;
+  text-align: center !important;
 }
-.rankId * { display: inline !important; background: none !important; color: inherit !important; }
+#rankingContainer .rankUser:nth-child(1) .rankId { color: var(--magenta) !important; font-family: var(--font) !important; }
+#rankingContainer .rankUser:nth-child(2) .rankId { color: var(--violet)  !important; font-family: var(--font) !important; }
+#rankingContainer .rankUser:nth-child(3) .rankId { color: var(--cyan)    !important; font-family: var(--font) !important; }
 
-/* top three ranks get the brand colours */
-:where(div, li):nth-child(1) > .rankId { color: var(--magenta) !important; font-family: var(--font) !important; }
-:where(div, li):nth-child(2) > .rankId { color: var(--violet) !important;  font-family: var(--font) !important; }
-:where(div, li):nth-child(3) > .rankId { color: var(--cyan) !important;    font-family: var(--font) !important; }
-
-/* ---------- avatar ---------- */
-:where(div, li):has(> .rankId) img:not(.heartIcon) {
-  width: 36px !important;
-  height: 36px !important;
+/* avatar: round, soft ring instead of gold/silver/bronze */
+#rankingContainer .profilePicture {
+  width: 38px !important;
+  height: 38px !important;
+  margin: 0 10px 0 0 !important;
+  border: 2px solid rgba(242, 238, 248, 0.10) !important;
   border-radius: 50% !important;
-  box-shadow: 0 0 0 1px var(--edge) !important;
   object-fit: cover !important;
+  display: block !important;
 }
+#rankingContainer .rankUser:nth-child(1) .profilePicture { border-color: var(--magenta) !important; }
+#rankingContainer .rankUser:nth-child(2) .profilePicture { border-color: var(--violet)  !important; }
+#rankingContainer .rankUser:nth-child(3) .profilePicture { border-color: var(--cyan)    !important; }
+#rankingContainer .crown1 { display: none !important; }
 
-/* ---------- name + points ---------- */
-.username {
-  flex: 1 1 auto !important;
-  min-width: 0 !important;
+/* name + likes */
+#rankingContainer .username {
+  margin: 0 !important;
+  padding: 0 !important;
+  max-width: 250px !important;
   font-family: var(--font) !important;
-  font-size: 20px !important;
+  font-size: 18px !important;
   font-weight: 600 !important;
-  line-height: 1.1 !important;
+  line-height: 1.2 !important;
   color: var(--text) !important;
   text-shadow: none !important;
   white-space: nowrap !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
 }
-
-.points {
-  flex: 0 0 auto !important;
-  display: flex !important;
-  align-items: center !important;
-  gap: 6px !important;
+#rankingContainer .points {
+  margin: 1px 0 0 0 !important;
+  padding: 0 !important;
   font-family: var(--font-light) !important;
-  font-size: 18px !important;
-  line-height: 1.1 !important;
+  font-size: 15px !important;
+  line-height: 1.2 !important;
   color: var(--dim) !important;
   text-shadow: none !important;
 }
-.points span {
+#rankingContainer .points span {
+  margin-left: 0 !important;
   font-family: var(--font) !important;
-  font-size: 19px !important;
   background: var(--threshold) !important;
   -webkit-background-clip: text !important;
   background-clip: text !important;
   color: transparent !important;
   -webkit-text-fill-color: transparent !important;
 }
-
-/* heart icon in pale, not TikTok red */
-.heartIcon {
-  width: 15px !important;
-  height: 15px !important;
-  filter: brightness(0) invert(0.93) !important;
-  opacity: 0.7 !important;
-}
+#rankingContainer .heartIcon { width: 12px !important; }
+#rankingContainer .heartIcon .cls-1, #rankingContainer .heartIcon path { fill: rgba(242, 238, 248, 0.7) !important; }
