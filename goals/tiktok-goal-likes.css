@@ -114,3 +114,26 @@ html, body {
   -webkit-background-clip: text !important; background-clip: text !important;
   color: transparent !important; -webkit-text-fill-color: transparent !important;
 }
+
+/* ---------- TikFinity inline-style overrides ---------- */
+.widget, .widget * { font-style: normal !important; }      /* TikFinity italicises its text */
+.widget .textContainer,
+.widget .textContainer *,
+.widget .goalText * {
+  font-family: var(--font) !important;
+  font-size: 22px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.025em !important;
+  line-height: 1.1 !important;
+  color: var(--text) !important;
+  text-shadow: none !important;
+  transform: none !important;
+}
+/* title above the bar, not below it */
+.widget .textContainer { order: -1 !important; }
+.widget .goalContainer,
+.widget > div:not(.textContainer):not(.progressContainer) {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important;
+}
