@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>MadoromiTV · now dreaming</title>
+<!--
+  "Now dreaming" card. OBS browser source, 400 x 100.
+  Game name comes from (first match wins):
+    1. #game=Kingdom Hearts III   in the URL (manual override)
+    2. your live Twitch category, checked every 60 s (automatic)
+  ?channel=name changes the Twitch channel (default madoromitv).
+-->
+<link rel="stylesheet" href="../theme/madoromi-theme.css">
+<style>
+  html, body { margin: 0; background: transparent; overflow: hidden; }
+  body { width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; }
+  .card {
+    position: relative; box-sizing: border-box;
+    width: calc(100vw - 16px); height: calc(100vh - 24px);
+    padding: 0 22px 0 26px;
+    display: flex; flex-direction: column; justify-content: center; gap: 2px;
+    background: linear-gradient(180deg, var(--mdr-glass1), var(--mdr-glass2));
+    border: 1px solid var(--mdr-edge);
+    border-radius: var(--mdr-radius-sm);
+    box-shadow: 0 0 24px rgba(130, 5, 179, 0.18);
+    opacity: 0; transform: translateY(6px); filter: blur(6px);
+    transition: opacity .8s var(--mdr-ease-in), transform .8s var(--mdr-ease-in), filter .8s var(--mdr-ease-in);
+  }
+  .card.show { opacity: 1; transform: none; filter: blur(0); }
+  .card::before {
+    content: ""; position: absolute; left: -1px; top: 12px; bottom: 12px;
+    width: 2px; border-radius: 2px; background: var(--mdr-rail);
+  }
+  .label {
+    font-family: var(--mdr-font-semilight); font-size: 12px; letter-spacing: .28em;
+    text-transform: uppercase; color: var(--mdr-dim);
+  }
+  .label span { font-family: var(--mdr-font-jp); letter-spacing: .2em; margin-right: 8px; }
+  .game {
+    font-family: var(--mdr-font-semibold); font-weight: 600; font-size: 22px; line-height: 1.25;
+    display: inline-block; max-width: 100%; align-self: flex-start;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    background: var(--mdr-threshold); -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+</style>
+</head>
+<body>
+  <div class="card" id="card">
+    <div class="label"><span>微睡み</span>now dreaming</div>
+    <div class="game" id="game"></div>
+  </div>
+<script>
+(function () {
+  "use strict";
+  const card = document.getElementById("card");
+  const el = document.getElementById("game");
+  const channel = new URLSearchParams(location.search).get("channel") || "madoromitv";
+  let current = null;
+
+  function fit() {
+    let size = 22;
+    el.style.fontSize = size + "px";
+    const max = card.clientWidth - 48;
+    while (el.scrollWidth > max && size > 15) { size -= 1; el.style.fontSize = size + "px"; }
+  }
+
+  function show(name) {
+    name = (name || "").trim();
+    if (name === current) return;
+    current = name;
+    card.classList.remove("show");
+    setTimeout(() => {
+      if (!name) return;                 // nothing to show: stay hidden
+      el.textContent = name.toLowerCase();
+      fit();
+      card.classList.add("show");
+    }, current === null ? 0 : 700);
+  }
+
+  function manual() {
+    const v = new URLSearchParams(location.hash.slice(1)).get("game");
+    return v ? v.replace(/\+/g, " ") : "";
+  }
+
+  async function poll() {
+    if (manual()) return show(manual());
+    try {
+      const r = await fetch(`https://decapi.me/twitch/game/${encodeURIComponent(channel)}?t=${Date.now()}`);
+      const t = (await r.text()).trim();
+      // decapi answers with an error sentence when something is wrong; ignore those
+      if (r.ok && t && t.length < 80 && !/not found|error|offline|unknown/i.test(t)) show(t);
+    } catch (e) { /* keep whatever is showing */ }
+  }
+
+  window.addEventListener("hashchange", poll);
+  poll();
+  setInterval(poll, 60000);
+})();
+</script>
+</body>
+</html>
