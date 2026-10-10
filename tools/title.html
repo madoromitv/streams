@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MadoromiTV · clip title maker</title>
+<style>
+  :root { --night:#0B0812; --text:#F2EEF8; --dim:rgba(242,238,248,.6); --edge:rgba(242,238,248,.12); }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--night); color:var(--text); font-family:"Segoe UI", system-ui, sans-serif; }
+  main { display:grid; grid-template-columns: 360px 1fr; gap:32px; padding:32px; max-width:1100px; margin:auto; }
+  h1 { font-weight:300; letter-spacing:.2em; text-transform:uppercase; font-size:20px; margin:0 0 24px; }
+  label { display:block; font-size:13px; color:var(--dim); margin:18px 0 6px; letter-spacing:.06em; }
+  input[type=text] { width:100%; padding:10px 12px; border-radius:10px; border:1px solid var(--edge);
+    background:rgba(20,14,31,.8); color:var(--text); font:16px "Segoe UI", system-ui, sans-serif; }
+  .row { display:flex; gap:10px; align-items:center; margin-top:8px; font-size:14px; }
+  input[type=range] { width:100%; }
+  button { margin-top:26px; width:100%; padding:12px; border:0; border-radius:999px; cursor:pointer;
+    font:600 15px "Segoe UI", system-ui, sans-serif; color:#fff;
+    background:linear-gradient(90deg,#BE0078,#8205B3 50%,#36D6E7); }
+  .hint { font-size:12px; color:var(--dim); margin-top:14px; line-height:1.5; }
+  .preview { background:#1a1324; border:1px solid var(--edge); border-radius:14px; padding:12px; justify-self:center; }
+  canvas { display:block; width:360px; height:640px; background:
+    repeating-conic-gradient(#221a2e 0 25%, #1a1324 0 50%) 0 0/24px 24px; border-radius:8px; }
+  @media (max-width: 820px) { main { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<main>
+  <section>
+    <h1>clip title maker</h1>
+    <label for="l1">Line 1</label>
+    <input id="l1" type="text" value="when the boss has">
+    <div class="row"><input id="g1" type="checkbox"> <span>gradient</span></div>
+    <label for="l2">Line 2 (optional)</label>
+    <input id="l2" type="text" value="a second phase">
+    <div class="row"><input id="g2" type="checkbox" checked> <span>gradient</span></div>
+    <label for="size">Text size: <span id="sizeVal">62</span> (shrinks automatically if a line is too long)</label>
+    <input id="size" type="range" min="44" max="80" value="62">
+    <button id="dl">Download PNG</button>
+    <p class="hint">Drop the PNG on V4 of your MADOROMI Vertical sequence at Position 540, 960, Scale 100. It's a full 1080 × 1920 transparent frame, so it lands in the right place automatically.</p>
+  </section>
+  <div class="preview"><canvas id="c" width="1080" height="1920"></canvas></div>
+</main>
+<script>
+(function () {
+  const W = 1080, MAXW = 900, FONT = '"Segoe UI", system-ui, sans-serif';
+  const c = document.getElementById("c"), x = c.getContext("2d");
+  const $ = (id) => document.getElementById(id);
+
+  function fontAt(px) { return `700 ${px}px ${FONT}`; }
+
+  function draw() {
+    const lines = [[$("l1").value.trim(), $("g1").checked], [$("l2").value.trim(), $("g2").checked]].filter(l => l[0]);
+    let size = +$("size").value; $("sizeVal").textContent = size;
+    x.font = fontAt(size);
+    while (size > 36 && lines.some(l => x.measureText(l[0]).width > MAXW)) { size -= 2; x.font = fontAt(size); }
+
+    x.clearRect(0, 0, W, 1920);
+    x.textAlign = "center"; x.textBaseline = "alphabetic";
+    const lead = Math.round(size * 1.18);
+    const centre = 470;                                   // middle of the title box (y 360–580)
+    const blockTop = centre - (lead * (lines.length - 1) + size * 0.72) / 2;
+    lines.forEach(([text, grad], i) => {
+      const y = Math.round(blockTop + size * 0.72 + i * lead);
+      const w = x.measureText(text).width;
+      if (grad) {
+        const g = x.createLinearGradient(W / 2 - w / 2, 0, W / 2 + w / 2, 0);
+        g.addColorStop(0, "#BE0078"); g.addColorStop(0.5, "#8205B3"); g.addColorStop(1, "#36D6E7");
+        x.fillStyle = g;
+      } else {
+        x.fillStyle = "#F2EEF8";
+      }
+      x.shadowColor = "rgba(11,8,18,0.55)"; x.shadowBlur = 18;
+      x.fillText(text, W / 2, y);
+    });
+    x.shadowBlur = 0;
+  }
+
+  ["l1","l2","g1","g2","size"].forEach(id => $(id).addEventListener("input", draw));
+  $("dl").addEventListener("click", () => {
+    draw();
+    const name = ($("l1").value + " " + $("l2").value).trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "title";
+    c.toBlob(b => { const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = `title-${name}.png`; a.click(); }, "image/png");
+  });
+  document.fonts.ready.then(draw); draw();
+})();
+</script>
+</body>
+</html>
