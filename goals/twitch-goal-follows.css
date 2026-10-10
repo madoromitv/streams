@@ -146,3 +146,14 @@ div[role="progressbar"] .idutqe {
   background-size: 380px 100% !important;   /* gradient spans the full bar, revealed as it fills */
   box-shadow: 0 0 12px var(--accent-glow) !important;
 }
+
+/* ---------- Twitch nests a second container inside the first:
+   keep the card + rail on the outer one only (fixes the double rail) ---------- */
+.goal_widget_v2__container .goal_widget_v2__container {
+  padding: 0 !important;
+  background: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  overflow: visible !important;
+}
+.goal_widget_v2__container .goal_widget_v2__container::before { content: none !important; display: none !important; }

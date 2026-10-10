@@ -71,7 +71,7 @@
     card.classList.remove("show");
     setTimeout(() => {
       if (!name) return;                 // nothing to show: stay hidden
-      el.textContent = name.toLowerCase();
+      el.textContent = name;
       fit();
       card.classList.add("show");
     }, current === null ? 0 : 700);
