@@ -20,6 +20,7 @@ Site root: `https://madoromitv.github.io/streams/`
 | `now/now.html` | "Now dreaming" game card; reads the live Twitch category every 60 s | Browser source 400 × 100; `#game=Name` overrides |
 | `tools/title.html` | Clip title maker; downloads a 1080 × 1920 title PNG | open in a browser, not OBS |
 | `assets/icons/`, `assets/logo-gradient.svg` | Platform icons and logo | — |
+| `setup/streamerbot/` | Streamer.bot rebuild files (no secrets) | Import / paste into Streamer.bot, see below |
 
 ## Alert parameters (URL #hash)
 
@@ -34,3 +35,13 @@ Each alert runs 10 seconds; Streamer.bot waits 10.5 s per alert in a blocking qu
 ## Updating
 
 Upload changed files through github.com → Add file → Upload files (drag a whole folder to keep its path), then wait about a minute for Pages to redeploy and refresh the OBS source.
+
+## Streamer.bot setup files
+
+| File | Use |
+|---|---|
+| `setup/streamerbot/alert-actions-export.txt` | Import string with Show Alert, the eleven Alert actions and the Alerts queue (exported from 1.0.7) |
+| `setup/streamerbot/reward-static-import.txt` | Import string for Reward · Static (heavy static burst); pick the Static reward in its trigger after import |
+| `setup/streamerbot/create-dreams-rewards.cs` | Execute C# Code sub-action that creates all 18 "Dreams" channel point rewards; add `System.dll` under References, run once via a Core › Test trigger, then disable |
+
+These contain action definitions only, no tokens or stream keys. Never upload Streamer.bot, OBS, TikFinity or Social Stream Ninja backups here: they hold account credentials and this repo is public.
