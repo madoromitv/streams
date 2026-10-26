@@ -21,14 +21,17 @@ Site root: `https://madoromitv.github.io/streams/`
 | `tools/title.html` | Clip title maker; downloads a 1080 × 1920 title PNG | open in a browser, not OBS |
 | `assets/icons/`, `assets/logo-gradient.svg` | Platform icons and logo | — |
 | `setup/streamerbot/` | Streamer.bot rebuild files (no secrets) | Import / paste into Streamer.bot, see below |
+| `madoromi-branding/` | Avatar, banners, offline screen, panels, thumbnail frame | uploaded to Twitch / YouTube / TikTok, not OBS |
+| `madoromi-twitch/` | Emotes, sub and Bits badges, flair, Dreams points icon (see its README.txt) | uploaded to Twitch |
+| `madoromi-youtube/` | Watermark, live thumbnail, membership badges and emoji | uploaded to YouTube |
 
 ## Alert parameters (URL #hash)
 
-`alertType`, `platform`, `userName`, `nickname`, `bits`, `gifts`, `tier`, `recipient`, `reward`, `cost`, `anonymous`, `giftName`, `coins`, `repeatCount`, `subMonth`, `viewers`.
+`alertType`, `platform`, `userName`, `nickname`, `bits`, `gifts`, `tier`, `recipient`, `reward`, `cost`, `anonymous`, `giftName`, `coins`, `repeatCount`, `subMonth`, `viewers`, `amount`, `level`, `upgrade`, `count`, `months`.
 
 Optional: `burst=light|medium|heavy|none` and `sound=light|medium|heavy|none` override the automatic pick. Page option `alert.html?silent` mutes a second copy.
 
-Alert types: `TwitchFollow`, `TwitchSub`, `TwitchCheer`, `TwitchGiftSub`, `TwitchGiftBomb`, `TwitchRewardRedemption`, `TwitchRaid`, `TTFollow`, `TTGift`, `TTSub` (plus `YTSubscribe`, `YTMember`, `YTSuperChat`).
+Alert types: `TwitchFollow`, `TwitchSub`, `TwitchCheer`, `TwitchGiftSub`, `TwitchGiftBomb`, `TwitchRewardRedemption`, `TwitchRaid`, `TTFollow`, `TTGift`, `TTSub`, `YTSubscribe`, `YTMember`, `YTSuperChat`, `YTSuperSticker`, `YTGiftMembers`, `YTMilestone`.
 
 Each alert runs 10 seconds; Streamer.bot waits 10.5 s per alert in a blocking queue.
 
@@ -43,5 +46,6 @@ Upload changed files through github.com → Add file → Upload files (drag a wh
 | `setup/streamerbot/alert-actions-export.txt` | Import string with Show Alert, the eleven Alert actions and the Alerts queue (exported from 1.0.7) |
 | `setup/streamerbot/reward-static-import.txt` | Import string for Reward · Static (heavy static burst); pick the Static reward in its trigger after import |
 | `setup/streamerbot/create-dreams-rewards.cs` | Execute C# Code sub-action that creates all 18 "Dreams" channel point rewards; add `System.dll` under References, run once via a Core › Test trigger, then disable |
+| `setup/streamerbot/youtube-alerts-import.txt` | Import string for the six YouTube alert actions (group YouTube, queue Alerts); add each action's YouTube trigger after import |
 
 These contain action definitions only, no tokens or stream keys. Never upload Streamer.bot, OBS, TikFinity or Social Stream Ninja backups here: they hold account credentials and this repo is public.

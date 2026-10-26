@@ -1,6 +1,6 @@
 /* MadoromiTV chat — Social Stream Ninja dock.html theme
    Load it by adding  &css=https://madoromitv.github.io/streams/chat/chat.css  to the SSN URL.
-   Horizontal canvas (400 x 615). chat-v.css is the vertical version (520 x 440). */
+   Horizontal canvas (400 x 615). The vertical canvas has no chat overlay. */
 
 @import url("../theme/madoromi-theme.css");
 
