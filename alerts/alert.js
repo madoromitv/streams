@@ -4,6 +4,7 @@
      alertType, platform, userName, nickname,
      bits, gifts, tier, recipient, reward, cost, anonymous,   (Twitch)
      giftName, coins, repeatCount, subMonth                    (TikTok)
+     amount, level, upgrade, count, months                     (YouTube)
    New, optional:
      viewers  (TwitchRaid)
      burst    (light | medium | heavy | none) to override the automatic pick
@@ -42,7 +43,10 @@
 
     YTSubscribe: "a new dreamer",
     YTMember: "sharing the dream",
-    YTSuperChat: "a spark in the dark"
+    YTSuperChat: "a spark in the dark",
+    YTSuperSticker: "a spark in the dark",
+    YTGiftMembers: "dreams for everyone",
+    YTMilestone: "still dreaming"
   };
 
   const BURSTS = {
@@ -50,7 +54,8 @@
     TTFollow: "light",
     YTSubscribe: "light",
     TwitchGiftBomb: "heavy",
-    TwitchRaid: "heavy"
+    TwitchRaid: "heavy",
+    YTGiftMembers: "heavy"
     // everything else: medium
   };
 
@@ -118,6 +123,21 @@
       case "TTSub": {
         const m = num(g("subMonth"));
         return m ? plural(m, "month") : "";
+      }
+      case "YTSuperChat":
+      case "YTSuperSticker":
+        return g("amount");
+      case "YTMember":
+        return g("upgrade").toLowerCase() === "true"
+          ? (g("level") ? `upgraded to ${g("level").toLowerCase()}` : "upgraded")
+          : g("level").toLowerCase();
+      case "YTGiftMembers": {
+        const n = num(g("count"));
+        return join(n ? plural(n, "gifted membership") : "", g("level").toLowerCase());
+      }
+      case "YTMilestone": {
+        const m = num(g("months"));
+        return join(m ? plural(m, "month") : "", g("level").toLowerCase());
       }
       case "TwitchFollow":
       case "TTFollow":
