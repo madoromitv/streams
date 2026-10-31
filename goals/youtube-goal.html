@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>MadoromiTV — YouTube goal</title>
+<link rel="stylesheet" href="../theme/madoromi-theme.css">
+<!--
+  MadoromiTV YouTube goal card, styled to match the Twitch goal cards.
+  Browser source size: 380 x 96. One source per card.
+
+  URL options (after the #):
+    metric=likes     likes on the current live stream          (Streamer.bot)
+    metric=viewers   people watching now                       (Streamer.bot)
+    metric=subs      channel subscriber count                  (YouTube Data API, needs key + channel)
+    target=25        the goal number
+    step=25          when the goal is reached, raise it by this much (default: same as target; 0 = stay)
+    label=...        card title (defaults below)
+    key=...          YouTube Data API key (subs only; keep it in OBS, never in this repo)
+    channel=UC...    your channel ID (subs only)
+    sb=ws://127.0.0.1:8080/   Streamer.bot WebSocket server (default shown)
+
+  Examples:
+    youtube-goal.html#metric=likes&target=25
+    youtube-goal.html#metric=subs&target=500&key=AIza...&channel=UC...
+    youtube-goal.html#metric=viewers&target=10
+-->
+<style>
+  :root {
+    --accent-a: #BE0078; --accent-b: #8205B3; --accent-glow: rgba(190, 0, 120, 0.40);
+  }
+  body.subs    { --accent-a: #36D6E7; --accent-b: #8205B3; --accent-glow: rgba(54, 214, 231, 0.35); }
+  body.viewers { --accent-a: #8205B3; --accent-b: #36D6E7; --accent-glow: rgba(130, 5, 179, 0.40); }
+
+  html, body {
+    width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden;
+    background: transparent; color: var(--mdr-text);
+    font-family: "Segoe UI Semibold", "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .card {
+    position: relative; box-sizing: border-box; width: 100%; height: 100%;
+    padding: 14px 18px 16px 20px; border-radius: 12px;
+    background: linear-gradient(180deg, var(--mdr-glass1), var(--mdr-glass2));
+    box-shadow: inset 0 0 0 1px var(--mdr-edge), 0 0 28px rgba(130, 5, 179, 0.18);
+    display: grid; grid-template-rows: auto auto; row-gap: 12px; align-content: center;
+    overflow: hidden;
+  }
+  .card::before {
+    content: ""; position: absolute; left: 0; top: 12px; bottom: 12px; width: 3px; border-radius: 2px;
+    background: linear-gradient(180deg, transparent 0%, var(--accent-a) 25%, var(--accent-b) 75%, transparent 100%);
+    box-shadow: 0 0 14px var(--accent-glow);
+  }
+  .head { display: grid; grid-template-columns: auto 1fr auto; align-items: center; column-gap: 10px; }
+  .head svg { width: 22px; height: 22px; opacity: .6; fill: var(--mdr-text); }
+  .title {
+    font-size: 22px; font-weight: 600; letter-spacing: .025em; line-height: 1.1;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .count { font-size: 24px; font-weight: 600; line-height: 1.1; white-space: nowrap; color: var(--mdr-dim); }
+  .count b {
+    font-weight: 600;
+    background: linear-gradient(90deg, var(--accent-a), var(--accent-b));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .bar {
+    height: 8px; border-radius: 999px; overflow: hidden; position: relative;
+    background: rgba(242, 238, 248, 0.10); box-shadow: inset 0 0 0 1px rgba(242, 238, 248, 0.06);
+  }
+  .fill {
+    height: 100%; width: 0%; border-radius: 999px;
+    background: var(--mdr-threshold); background-size: 380px 100%;
+    box-shadow: 0 0 12px var(--accent-glow);
+    transition: width .8s cubic-bezier(.2, .8, .2, 1);
+  }
+  .card.reached .fill { animation: pulse 1.6s ease-in-out 3; }
+  @keyframes pulse { 50% { filter: brightness(1.5); box-shadow: 0 0 22px var(--accent-glow); } }
+</style>
+</head>
+<body>
+  <div class="card" id="card">
+    <div class="head">
+      <svg id="icon" viewBox="0 0 24 24"></svg>
+      <div class="title" id="title"></div>
+      <div class="count"><b id="num">0</b> / <span id="target">0</span></div>
+    </div>
+    <div class="bar"><div class="fill" id="fill"></div></div>
+  </div>
+
+<script>
+(function () {
+  "use strict";
+  const p = new URLSearchParams(location.hash.slice(1) || location.search.slice(1));
+  const metric = (p.get("metric") || "likes").toLowerCase();
+  let target = Math.max(1, parseInt(p.get("target"), 10) || { likes: 25, subs: 500, viewers: 10 }[metric] || 10);
+  const stepRaw = p.get("step");
+  const step = stepRaw === null ? target : Math.max(0, parseInt(stepRaw, 10) || 0);
+  const SB = p.get("sb") || "ws://127.0.0.1:8080/";
+
+  const TITLES = { likes: "Like the stream", subs: `Road to ${target}`, viewers: "Dreamers here" };
+  const ICONS = {
+    likes:   "M2 21h4V9H2v12zm20-11a2 2 0 0 0-2-2h-6.3l1-4.6v-.3a1.5 1.5 0 0 0-.4-1L13.2 1 6.6 7.6A2 2 0 0 0 6 9v10a2 2 0 0 0 2 2h9a2 2 0 0 0 1.8-1.2l3-7.1c.1-.2.2-.5.2-.7v-2z",
+    subs:    "M15 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4zm-9-2V7H4v3H1v2h3v3h2v-3h3v-2H6zm9 4c-2.7 0-8 1.3-8 4v2h16v-2c0-2.7-5.3-4-8-4z",
+    viewers: "M12 4.5C7 4.5 2.7 7.6 1 12c1.7 4.4 6 7.5 11 7.5s9.3-3.1 11-7.5c-1.7-4.4-6-7.5-11-7.5zm0 12.5a5 5 0 1 1 5-5 5 5 0 0 1-5 5zm0-8a3 3 0 1 0 3 3 3 3 0 0 0-3-3z"
+  };
+
+  document.body.classList.add(metric);
+  document.getElementById("title").textContent = p.get("label") || TITLES[metric] || metric;
+  document.getElementById("icon").innerHTML = `<path d="${ICONS[metric] || ICONS.likes}"/>`;
+
+  const $num = document.getElementById("num"), $target = document.getElementById("target");
+  const $fill = document.getElementById("fill"), $card = document.getElementById("card");
+  let value = 0, celebrated = false;
+
+  function render() {
+    if (step > 0) while (value >= target) target += step;   // move the goal on
+    const reached = value >= target;
+    if (metric === "subs" && !p.get("label")) document.getElementById("title").textContent = `Road to ${target.toLocaleString("en-GB")}`;
+    $num.textContent = value.toLocaleString("en-GB");
+    $target.textContent = target.toLocaleString("en-GB");
+    $fill.style.width = Math.min(100, (value / target) * 100).toFixed(1) + "%";
+    if (reached && !celebrated) { celebrated = true; $card.classList.remove("reached"); void $card.offsetWidth; $card.classList.add("reached"); }
+  }
+  function set(v) {
+    v = Number(v);
+    if (!Number.isFinite(v) || v < 0) return;
+    const before = target;
+    value = Math.floor(v);
+    render();
+    if (target !== before) { $card.classList.remove("reached"); void $card.offsetWidth; $card.classList.add("reached"); }
+  }
+  render();
+
+  // ---------- subscribers: YouTube Data API, every 60 s ----------
+  if (metric === "subs") {
+    const key = p.get("key"), channel = p.get("channel");
+    async function poll() {
+      if (!key || !channel) return;
+      try {
+        const r = await fetch(`https://www.googleapis.com/youtube/v3/channels?part=statistics&id=${encodeURIComponent(channel)}&key=${encodeURIComponent(key)}`);
+        const j = await r.json();
+        const s = j.items && j.items[0] && j.items[0].statistics;
+        if (s && !s.hiddenSubscriberCount) set(s.subscriberCount);
+      } catch (e) { /* try again next minute */ }
+    }
+    poll(); setInterval(poll, 60000);
+    return;
+  }
+
+  // ---------- likes / viewers: Streamer.bot WebSocket ----------
+  const FIELD = metric === "viewers" ? "concurrentviewers" : "likecount";
+  function find(obj, depth) {             // field names vary in case and nesting
+    if (!obj || typeof obj !== "object" || depth > 4) return undefined;
+    for (const k of Object.keys(obj)) {
+      if (k.toLowerCase() === FIELD) return obj[k];
+      const v = find(obj[k], depth + 1);
+      if (v !== undefined) return v;
+    }
+    return undefined;
+  }
+  function connect() {
+    let ws;
+    try { ws = new WebSocket(SB); } catch (e) { return setTimeout(connect, 5000); }
+    ws.onopen = () => ws.send(JSON.stringify({
+      request: "Subscribe", id: "mdr-yt-goal",
+      events: { YouTube: ["StatisticsUpdated", "BroadcastStarted", "BroadcastEnded"] }
+    }));
+    ws.onmessage = (m) => {
+      let msg; try { msg = JSON.parse(m.data); } catch (e) { return; }
+      const ev = msg.event || {};
+      if (String(ev.source).toLowerCase() !== "youtube") return;
+      if (ev.type === "BroadcastStarted") { celebrated = false; target = Math.max(1, parseInt(p.get("target"), 10) || target); set(0); return; }
+      if (ev.type === "StatisticsUpdated") { const v = find(msg.data, 0); if (v !== undefined) set(v); }
+    };
+    ws.onclose = () => setTimeout(connect, 5000);
+    ws.onerror = () => { try { ws.close(); } catch (e) {} };
+  }
+  connect();
+})();
+</script>
+</body>
+</html>

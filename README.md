@@ -15,6 +15,7 @@ Site root: `https://madoromitv.github.io/streams/`
 | `alerts/media/sfx-*.ogg` | Light / medium / heavy alert sounds | played by the alert page |
 | `chat/chat.css` | Social Stream Ninja theme (16 px glass cards) | add `&css=https://madoromitv.github.io/streams/chat/chat.css` to the SSN dock URL; 400 × 615 |
 | `goals/twitch-goal-*.css` | Twitch Creator Goal widgets (subs, bits, follows) | paste into the source's Custom CSS; 380 × 96 |
+| `goals/youtube-goal.html` | YouTube goal card (likes, subscribers, viewers), same look as the Twitch cards; data from Streamer.bot (port 8080) and the YouTube Data API | Browser source 380 × 96 on the YouTube canvas; options after `#`: `metric`, `target`, `step`, `label`, `key`, `channel` |
 | `goals/tiktok-goal-*.css` | TikFinity goal widgets (likes, follows) | paste into Custom CSS; 504 × 96 |
 | `goals/tiktok-likeathon.css` | TikFinity top likers, top 6 | paste into Custom CSS; 360 × 420 |
 | `now/now.html` | "Now dreaming" game card; reads the live Twitch category every 60 s | Browser source 400 × 100; `#game=Name` overrides |
