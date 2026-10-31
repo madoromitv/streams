@@ -47,6 +47,7 @@ Upload changed files through github.com → Add file → Upload files (drag a wh
 | `setup/streamerbot/alert-actions-export.txt` | Import string with Show Alert, the eleven Alert actions and the Alerts queue (exported from 1.0.7) |
 | `setup/streamerbot/reward-static-import.txt` | Import string for Reward · Static (heavy static burst); pick the Static reward in its trigger after import |
 | `setup/streamerbot/create-dreams-rewards.cs` | Execute C# Code sub-action that creates all 18 "Dreams" channel point rewards; add `System.dll` under References, run once via a Core › Test trigger, then disable |
+| `setup/streamerbot/going-live-chat.cs` | Execute C# Code for "Going Live · Chat": posts a welcome message in Twitch chat (Stream Online) and YouTube chat (Broadcast Started), once per stream |
 | `setup/streamerbot/youtube-alerts-import.txt` | Import string for the six YouTube alert actions (group YouTube, queue Alerts); add each action's YouTube trigger after import |
 
 These contain action definitions only, no tokens or stream keys. Never upload Streamer.bot, OBS, TikFinity or Social Stream Ninja backups here: they hold account credentials and this repo is public.
