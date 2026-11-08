@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>MadoromiTV — TikTok Likeathon</title>
+<link rel="stylesheet" href="../theme/madoromi-theme.css">
+<!--
+  MadoromiTV Likeathon: the top likers of the current TikTok LIVE.
+  Replaces TikFinity's Likeathon widget (since TikFinity's November 2026 update its widgets
+  load inside a cross-origin iframe that OBS Custom CSS can't style).
+  Data comes straight from TikFinity Desktop's local WebSocket server.
+  Browser source size: 360 x 420. Leave Custom CSS empty.
+
+  URL options (after the #):
+    count=6                    how many likers to show (default 6)
+    tf=ws://127.0.0.1:21213/   TikFinity WebSocket server (default shown)
+    demo=1                     show sample likers (for checking the layout without a LIVE)
+  The board survives an OBS/source refresh and clears itself after 6 hours without likes.
+-->
+<style>
+  :root {
+    --magenta: #BE0078; --violet: #8205B3; --cyan: #36D6E7;
+    --font: "Segoe UI Semibold", "Segoe UI", sans-serif;
+    --font-light: "Segoe UI Semilight", "Segoe UI", sans-serif;
+  }
+  html, body {
+    width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden;
+    background: transparent; color: var(--mdr-text); font-family: var(--font);
+    -webkit-font-smoothing: antialiased;
+  }
+  #board { position: relative; width: 100%; height: 100%; padding-top: 2px; box-sizing: border-box; }
+  .row {
+    position: absolute; left: 0; right: 0; height: 60px; box-sizing: border-box;
+    display: grid; grid-template-columns: 26px 44px 1fr; align-items: center; column-gap: 8px;
+    padding: 7px 14px 7px 12px; border-radius: 12px;
+    background: linear-gradient(180deg, var(--mdr-glass1), var(--mdr-glass2));
+    box-shadow: inset 0 0 0 1px var(--mdr-edge), 0 0 20px rgba(130, 5, 179, 0.14);
+    overflow: hidden;
+    transition: top .5s cubic-bezier(.2, .8, .2, 1), opacity .4s;
+  }
+  .row::before {
+    content: ""; position: absolute; left: 0; top: 10px; bottom: 10px; width: 2px; border-radius: 2px;
+    background: linear-gradient(180deg, transparent, var(--violet) 30%, var(--violet) 70%, transparent);
+  }
+  .row.r1::before { background: linear-gradient(180deg, transparent, var(--magenta) 25%, var(--cyan) 75%, transparent); box-shadow: 0 0 12px rgba(190, 0, 120, .5); }
+  .row.r2::before { background: linear-gradient(180deg, transparent, var(--magenta) 30%, var(--magenta) 70%, transparent); }
+  .row.r3::before { background: linear-gradient(180deg, transparent, var(--cyan) 30%, var(--cyan) 70%, transparent); }
+
+  .rank { font-family: var(--font-light); font-size: 18px; color: var(--mdr-dim); text-align: center; }
+  .r1 .rank { color: var(--magenta); font-family: var(--font); }
+  .r2 .rank { color: var(--violet);  font-family: var(--font); }
+  .r3 .rank { color: var(--cyan);    font-family: var(--font); }
+
+  .pic {
+    width: 38px; height: 38px; border-radius: 50%; object-fit: cover; display: block;
+    border: 2px solid rgba(242, 238, 248, .10); background: rgba(242, 238, 248, .08);
+    font-size: 17px; line-height: 38px; text-align: center; color: var(--mdr-dim);
+  }
+  .r1 .pic { border-color: var(--magenta); }
+  .r2 .pic { border-color: var(--violet); }
+  .r3 .pic { border-color: var(--cyan); }
+
+  .name {
+    font-size: 18px; font-weight: 600; line-height: 1.2;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .likes { margin-top: 1px; font-family: var(--font-light); font-size: 15px; line-height: 1.2; color: var(--mdr-dim); }
+  .likes svg { width: 12px; height: 12px; fill: rgba(242, 238, 248, .7); vertical-align: -1px; margin-right: 4px; }
+  .likes b {
+    font-family: var(--font); font-weight: 600;
+    background: var(--mdr-threshold); -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .row.bump { animation: bump .6s ease-out; }
+  @keyframes bump { 30% { box-shadow: inset 0 0 0 1px rgba(190, 0, 120, .5), 0 0 26px rgba(190, 0, 120, .35); } }
+</style>
+</head>
+<body>
+<div id="board"></div>
+<script>
+(function () {
+  "use strict";
+  const p = new URLSearchParams(location.hash.slice(1) || location.search.slice(1));
+  const COUNT = Math.max(1, Math.min(10, parseInt(p.get("count"), 10) || 6));
+  const TF = p.get("tf") || "ws://127.0.0.1:21213/";
+  const KEY = "mdr-tt-likeathon", ROW = 68;   // 60px row + 8px gap
+  const HEART = '<svg viewBox="0 0 24 24"><path d="M12 21.4l-1.5-1.3C5.4 15.4 2 12.3 2 8.5 2 5.4 4.4 3 7.5 3c1.7 0 3.4.8 4.5 2.1C13.1 3.8 14.8 3 16.5 3 19.6 3 22 5.4 22 8.5c0 3.8-3.4 6.9-8.5 11.6L12 21.4z"/></svg>';
+  const board = document.getElementById("board");
+  const rows = new Map();          // id -> element
+  let users = {};                  // id -> {name, pic, likes}
+
+  const esc = (s) => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+  function load() {
+    try {
+      const s = JSON.parse(localStorage.getItem(KEY) || "null");
+      if (s && Date.now() - s.t < 6 * 3600e3) users = s.u || {};
+    } catch (e) {}
+  }
+  let saveTimer = 0;
+  function save() {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => {
+      // keep the board small: only the top 50 are stored
+      const top = Object.entries(users).sort((a, b) => b[1].likes - a[1].likes).slice(0, 50);
+      try { localStorage.setItem(KEY, JSON.stringify({ t: Date.now(), u: Object.fromEntries(top) })); } catch (e) {}
+    }, 1000);
+  }
+
+  function rowFor(id, u) {
+    let el = rows.get(id);
+    if (!el) {
+      el = document.createElement("div");
+      el.className = "row"; el.style.opacity = "0"; el.style.top = (COUNT * ROW) + "px";
+      board.appendChild(el); rows.set(id, el);
+      requestAnimationFrame(() => { el.style.opacity = "1"; });
+    }
+    const initial = esc((u.name || "?").trim().charAt(0).toUpperCase() || "?");
+    const pic = u.pic
+      ? `<img class="pic" src="${esc(u.pic)}" alt="" onerror="this.outerHTML='<div class=&quot;pic&quot;>${initial}</div>'">`
+      : `<div class="pic">${initial}</div>`;
+    const html = `<div class="rank"></div>${pic}<div><div class="name">${esc(u.name)}</div>` +
+                 `<div class="likes">${HEART}<b>${u.likes.toLocaleString("en-GB")}</b> likes</div></div>`;
+    if (el.dataset.sig !== html) { el.innerHTML = html; el.dataset.sig = html; }
+    return el;
+  }
+
+  function render(bumpId) {
+    const top = Object.entries(users).sort((a, b) => b[1].likes - a[1].likes).slice(0, COUNT);
+    const keep = new Set(top.map(([id]) => id));
+    for (const [id, el] of rows) if (!keep.has(id)) { el.style.opacity = "0"; setTimeout(() => el.remove(), 400); rows.delete(id); }
+    top.forEach(([id, u], i) => {
+      const el = rowFor(id, u);
+      el.className = "row" + (i < 3 ? " r" + (i + 1) : "");
+      el.querySelector(".rank").textContent = i + 1;
+      el.style.top = (i * ROW) + "px";
+      if (id === bumpId) { el.classList.remove("bump"); void el.offsetWidth; el.classList.add("bump"); }
+    });
+  }
+
+  function addLikes(d) {
+    const id = String(d.uniqueId || d.userId || (d.user && (d.user.uniqueId || d.user.userId)) || "");
+    if (!id) return;
+    const n = Number(d.likeCount ?? d.count ?? 1) || 1;
+    const u = users[id] || (users[id] = { name: "", pic: "", likes: 0 });
+    u.name = d.nickname || (d.user && d.user.nickname) || d.uniqueId || u.name || id;
+    u.pic = d.profilePictureUrl || (d.user && d.user.profilePictureUrl) || u.pic || "";
+    u.likes += n;
+    render(id); save();
+  }
+
+  if (p.get("demo") === "1") {
+    const names = ["SleepyKitsune", "Moonbeam", "DriftKing", "yume", "NightOwl", "rin_drifts"];
+    names.forEach((n, i) => { users["d" + i] = { name: n, pic: "", likes: [4820, 3175, 2240, 1310, 860, 415][i] }; });
+    render(); return;
+  }
+
+  load(); render();
+  function connect() {
+    let ws;
+    try { ws = new WebSocket(TF); } catch (e) { return setTimeout(connect, 5000); }
+    ws.onmessage = (m) => {
+      let msg; try { msg = JSON.parse(m.data); } catch (e) { return; }
+      if (String(msg.event || msg.type || "").toLowerCase() === "like") addLikes(msg.data || {});
+    };
+    ws.onclose = () => setTimeout(connect, 5000);
+    ws.onerror = () => { try { ws.close(); } catch (e) {} };
+  }
+  connect();
+})();
+</script>
+</body>
+</html>

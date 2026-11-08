@@ -18,7 +18,8 @@ Site root: `https://madoromitv.github.io/streams/`
 | `goals/youtube-goal.html` | YouTube goal card (likes, subscribers, viewers), same look as the Twitch cards; data from Streamer.bot (port 8080) and the YouTube Data API | Browser source 380 × 96 on the YouTube canvas; options after `#`: `metric`, `target`, `step`, `label`, `key`, `channel` |
 | `goals/tiktok-goal.html` | TikTok goal card (likes, new followers), same look as the Twitch/YouTube cards; data from TikFinity Desktop's WebSocket server (port 21213) | Browser source 504 × 96, no Custom CSS; options after `#`: `metric`, `target`, `step`, `label`, `demo=1` |
 | `goals/tiktok-goal-*.css` | Legacy: styled TikFinity's old goal widgets; no longer works since TikFinity's November 2026 update (widgets now load in a cross-origin iframe) | kept for reference |
-| `goals/tiktok-likeathon.css` | TikFinity top likers, top 6 | paste into Custom CSS; 360 × 420 |
+| `goals/tiktok-likeathon.html` | Likeathon: top likers of the current TikTok LIVE; data from TikFinity Desktop's WebSocket server (port 21213); clears after 6 h without likes | Browser source 360 × 420, no Custom CSS; options after `#`: `count`, `demo=1` |
+| `goals/tiktok-likeathon.css` | Legacy: styled TikFinity's old Likeathon widget; no longer works since TikFinity's November 2026 update | kept for reference |
 | `now/now.html` | "Now dreaming" game card; reads the live Twitch category every 60 s | Browser source 400 × 100; `#game=Name` overrides |
 | `tools/title.html` | Clip title maker; downloads a 1080 × 1920 title PNG | open in a browser, not OBS |
 | `assets/icons/`, `assets/logo-gradient.svg` | Platform icons and logo | — |
