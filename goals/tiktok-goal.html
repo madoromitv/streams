@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>MadoromiTV — TikTok goal</title>
+<link rel="stylesheet" href="../theme/madoromi-theme.css">
+<!--
+  MadoromiTV TikTok goal card (replaces TikFinity's goal widgets, which since the
+  November 2026 TikFinity update load inside a cross-origin iframe that OBS Custom CSS can't style).
+  Data comes straight from TikFinity Desktop's local WebSocket server.
+  Browser source size: 504 x 96. Leave Custom CSS empty.
+
+  URL options (after the #):
+    metric=likes     total likes on the current LIVE
+    metric=follows   new followers this LIVE
+    target=50000     the goal number
+    step=...         when the goal is reached, raise it by this much (default: same as target; 0 = stay)
+    label=...        card title (defaults: "Like goal", "New followers")
+    tf=ws://127.0.0.1:21213/   TikFinity WebSocket server (default shown)
+    demo=1           show sample numbers (for checking the layout without a LIVE)
+
+  Examples:
+    tiktok-goal.html#metric=likes&target=50000
+    tiktok-goal.html#metric=follows&target=10
+-->
+<style>
+  :root { --accent-a: #BE0078; --accent-b: #36D6E7; --accent-glow: rgba(190, 0, 120, 0.40); }
+  body.follows { --accent-a: #8205B3; --accent-b: #BE0078; --accent-glow: rgba(130, 5, 179, 0.45); }
+
+  html, body {
+    width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden;
+    background: transparent; color: var(--mdr-text);
+    font-family: "Segoe UI Semibold", "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .card {
+    position: relative; box-sizing: border-box; width: 100%; height: 100%;
+    padding: 14px 18px 16px 20px; border-radius: 12px;
+    background: linear-gradient(180deg, var(--mdr-glass1), var(--mdr-glass2));
+    box-shadow: inset 0 0 0 1px var(--mdr-edge), 0 0 28px rgba(130, 5, 179, 0.18);
+    display: grid; grid-template-rows: auto auto; row-gap: 12px; align-content: center;
+    overflow: hidden;
+  }
+  .card::before {
+    content: ""; position: absolute; left: 0; top: 12px; bottom: 12px; width: 3px; border-radius: 2px;
+    background: linear-gradient(180deg, transparent 0%, var(--accent-a) 25%, var(--accent-b) 75%, transparent 100%);
+    box-shadow: 0 0 14px var(--accent-glow);
+  }
+  .head { display: grid; grid-template-columns: auto 1fr auto; align-items: center; column-gap: 10px; }
+  .head svg { width: 22px; height: 22px; opacity: .6; fill: var(--mdr-text); }
+  .title {
+    font-size: 22px; font-weight: 600; letter-spacing: .025em; line-height: 1.2;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .count { font-size: 22px; font-weight: 600; line-height: 1.2; white-space: nowrap; color: var(--mdr-dim); }
+  .count b {
+    font-weight: 600;
+    background: linear-gradient(90deg, var(--accent-a), var(--accent-b));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .bar {
+    height: 8px; border-radius: 999px; overflow: hidden;
+    background: rgba(242, 238, 248, 0.10); box-shadow: inset 0 0 0 1px rgba(242, 238, 248, 0.06);
+  }
+  .fill {
+    height: 100%; width: 0%; border-radius: 999px;
+    background: var(--mdr-threshold); background-size: 466px 100%;
+    box-shadow: 0 0 12px var(--accent-glow);
+    transition: width .8s cubic-bezier(.2, .8, .2, 1);
+  }
+  .card.reached { animation: shake .5s ease-in-out 2; }
+  .card.reached .fill { animation: pulse 1.6s ease-in-out 3; }
+  @keyframes pulse { 50% { filter: brightness(1.5); box-shadow: 0 0 22px var(--accent-glow); } }
+  @keyframes shake { 25% { transform: translateX(-3px); } 75% { transform: translateX(3px); } }
+</style>
+</head>
+<body>
+  <div class="card" id="card">
+    <div class="head">
+      <svg id="icon" viewBox="0 0 24 24"></svg>
+      <div class="title" id="title"></div>
+      <div class="count"><b id="num">0</b> / <span id="target">0</span></div>
+    </div>
+    <div class="bar"><div class="fill" id="fill"></div></div>
+  </div>
+
+<script>
+(function () {
+  "use strict";
+  const p = new URLSearchParams(location.hash.slice(1) || location.search.slice(1));
+  const metric = (p.get("metric") || "likes").toLowerCase() === "follows" ? "follows" : "likes";
+  const baseTarget = Math.max(1, parseInt(p.get("target"), 10) || (metric === "likes" ? 50000 : 10));
+  let target = baseTarget;
+  const stepRaw = p.get("step");
+  const step = stepRaw === null ? baseTarget : Math.max(0, parseInt(stepRaw, 10) || 0);
+  const TF = p.get("tf") || "ws://127.0.0.1:21213/";
+
+  const ICONS = {
+    likes:   "M12 21.4l-1.5-1.3C5.4 15.4 2 12.3 2 8.5 2 5.4 4.4 3 7.5 3c1.7 0 3.4.8 4.5 2.1C13.1 3.8 14.8 3 16.5 3 19.6 3 22 5.4 22 8.5c0 3.8-3.4 6.9-8.5 11.6L12 21.4z",
+    follows: "M15 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4zm-9-2V7H4v3H1v2h3v3h2v-3h3v-2H6zm9 4c-2.7 0-8 1.3-8 4v2h16v-2c0-2.7-5.3-4-8-4z"
+  };
+  document.body.classList.add(metric);
+  document.getElementById("title").textContent = p.get("label") || (metric === "likes" ? "Like goal" : "New followers");
+  document.getElementById("icon").innerHTML = `<path d="${ICONS[metric]}"/>`;
+
+  const $num = document.getElementById("num"), $target = document.getElementById("target");
+  const $fill = document.getElementById("fill"), $card = document.getElementById("card");
+  let value = 0;
+
+  function celebrate() { $card.classList.remove("reached"); void $card.offsetWidth; $card.classList.add("reached"); }
+  function render() {
+    const before = target;
+    if (step > 0) while (value >= target) target += step;
+    $num.textContent = value.toLocaleString("en-GB");
+    $target.textContent = target.toLocaleString("en-GB");
+    $fill.style.width = Math.min(100, (value / target) * 100).toFixed(1) + "%";
+    if (target !== before || (step === 0 && value >= target && !render.done)) { render.done = value >= target; celebrate(); }
+  }
+  function set(v) { v = Math.floor(Number(v)); if (Number.isFinite(v) && v >= 0) { value = v; render(); } }
+
+  // ---------- follows survive an OBS/source refresh; reset after 6 h of quiet ----------
+  const KEY = "mdr-tt-follows";
+  const seen = new Set();
+  function loadFollows() {
+    try {
+      const s = JSON.parse(localStorage.getItem(KEY) || "null");
+      if (s && Date.now() - s.t < 6 * 3600e3) { (s.ids || []).forEach(id => seen.add(id)); return s.n || 0; }
+    } catch (e) {}
+    return 0;
+  }
+  function saveFollows() {
+    try { localStorage.setItem(KEY, JSON.stringify({ t: Date.now(), n: value, ids: [...seen].slice(-500) })); } catch (e) {}
+  }
+
+  if (p.get("demo") === "1") { set(metric === "likes" ? Math.round(baseTarget * 0.62) : Math.max(1, Math.round(baseTarget * 0.4))); return; }
+  if (metric === "follows") set(loadFollows()); else render();
+
+  // ---------- TikFinity WebSocket ----------
+  function handle(msg) {
+    const ev = String(msg.event || msg.type || "").toLowerCase();
+    const d = msg.data || {};
+    if (metric === "likes") {
+      const total = d.totalLikeCount ?? d.totalLikes ?? d.likeCountTotal;
+      if ((ev === "like" || ev === "roomuser" || ev === "roomstats") && total !== undefined) set(total);
+      return;
+    }
+    const isFollow = ev === "follow" ||
+      (ev === "social" && /follow/i.test(String(d.displayType || d.label || "")));
+    if (!isFollow) return;
+    const id = String(d.uniqueId || d.userId || (d.user && (d.user.uniqueId || d.user.userId)) || Math.random());
+    if (seen.has(id)) return;           // TikTok can repeat a follow event
+    seen.add(id);
+    set(value + 1);
+    saveFollows();
+  }
+  function connect() {
+    let ws;
+    try { ws = new WebSocket(TF); } catch (e) { return setTimeout(connect, 5000); }
+    ws.onmessage = (m) => { try { handle(JSON.parse(m.data)); } catch (e) {} };
+    ws.onclose = () => setTimeout(connect, 5000);
+    ws.onerror = () => { try { ws.close(); } catch (e) {} };
+  }
+  connect();
+})();
+</script>
+</body>
+</html>
