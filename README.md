@@ -23,6 +23,7 @@ Site root: `https://madoromitv.github.io/streams/`
 | `now/now.html` | "Now dreaming" game card; reads the live Twitch category every 60 s | Browser source 400 × 100; `#game=Name` overrides |
 | `tools/title.html` | Clip title maker; downloads a 1080 × 1920 title PNG | open in a browser, not OBS |
 | `tools/thumbnail.html` | YouTube thumbnail maker for long-form (MadoromiTV Lore style): drop a screenshot, type 2 lines, download a 1280 × 720 JPG | open https://madoromitv.github.io/streams/tools/thumbnail.html |
+| `tools/short-frame.html` | Shorts frame maker: 1080 × 1920 frame with hook text on top and a transparent 16:9 window for the clip | open https://madoromitv.github.io/streams/tools/short-frame.html |
 | `assets/lore/` | Crystal, rune ring and fonts (Inter, GFS Baskerville; SIL OFL) used by the thumbnail maker | — |
 | `assets/icons/`, `assets/logo-gradient.svg` | Platform icons and logo | — |
 | `setup/streamerbot/` | Streamer.bot rebuild files (no secrets) | Import / paste into Streamer.bot, see below |

@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MadoromiTV · Shorts frame maker</title>
+<style>
+  @font-face { font-family: "MDR Black"; src: url("../assets/lore/fonts/Inter-Black.otf"); }
+  @font-face { font-family: "MDR Semi"; src: url("../assets/lore/fonts/Inter-SemiBold.otf"); }
+  :root { --night:#0B0812; --text:#F2EEF8; --dim:rgba(242,238,248,.6); --edge:rgba(242,238,248,.12); }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--night); color:var(--text); font-family:"Segoe UI", system-ui, sans-serif; }
+  main { display:grid; grid-template-columns: 360px 1fr; gap:32px; padding:32px; max-width:1100px; margin:auto; }
+  h1 { font-weight:300; letter-spacing:.2em; text-transform:uppercase; font-size:20px; margin:0 0 24px; }
+  label { display:block; font-size:13px; color:var(--dim); margin:16px 0 6px; letter-spacing:.06em; }
+  input[type=text] { width:100%; padding:10px 12px; border-radius:10px; border:1px solid var(--edge);
+    background:rgba(20,14,31,.8); color:var(--text); font:16px "Segoe UI", system-ui, sans-serif; }
+  input[type=range] { width:100%; }
+  .row { display:flex; gap:10px; align-items:center; margin-top:8px; font-size:14px; }
+  button { margin-top:22px; width:100%; padding:12px; border:0; border-radius:999px; cursor:pointer;
+    font:600 15px "Segoe UI", system-ui, sans-serif; color:#fff; background:linear-gradient(90deg,#BE0078,#8205B3 50%,#36D6E7); }
+  .hint { font-size:12px; color:var(--dim); margin-top:14px; line-height:1.55; }
+  .preview { background:#1a1324; border:1px solid var(--edge); border-radius:14px; padding:12px; justify-self:center; }
+  canvas { display:block; width:360px; height:640px; border-radius:8px;
+    background: repeating-conic-gradient(#3a2f4a 0 25%, #2a2238 0 50%) 0 0/24px 24px; }
+  @media (max-width: 820px) { main { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<main>
+  <section>
+    <h1>shorts frame maker</h1>
+    <label for="l1">Hook, line 1 (gold)</label>
+    <input id="l1" type="text" value="ZIDANE WAS MADE">
+    <label for="l2">Hook, line 2 (brand gradient)</label>
+    <input id="l2" type="text" value="TO REPLACE KUJA">
+    <label for="game">Game tag</label>
+    <input id="game" type="text" value="FINAL FANTASY IX">
+    <label for="size">Hook size: <span id="sizeVal">96</span> (shrinks automatically if a line is too long)</label>
+    <input id="size" type="range" min="64" max="120" value="96">
+    <div class="row"><input id="handle" type="checkbox" checked> <span>@madoromitv under the clip</span></div>
+    <button id="dl">Download PNG</button>
+    <p class="hint">A full 1080 × 1920 frame with a transparent window for your 16:9 clip.<br>
+    In Premiere (1080 × 1920 sequence): your clip on V1 at Position 540, 960, Scale 56.25 (a 1920 × 1080 clip then fills the window exactly);
+    this PNG on V2; captions on V3 (centred, about Y 1420); progress bar and end card from the Shorts kit above them.</p>
+  </section>
+  <div class="preview"><canvas id="c" width="1080" height="1920"></canvas></div>
+</main>
+<script>
+(function () {
+  const W = 1080, H = 1920, WIN_T = 656, WIN_B = 1264;   // 1080 x 608 window = a 16:9 clip at full width
+  const c = document.getElementById("c"), x = c.getContext("2d");
+  const $ = (id) => document.getElementById(id);
+  const fog = new Image(); fog.src = "../assets/lore/fog-vertical.jpg";
+  const crystal = new Image(); crystal.src = "../assets/lore/crystal-still.png";
+
+  function draw() {
+    x.clearRect(0, 0, W, H);
+    // 1) mist panels above and below the window
+    x.save();
+    x.beginPath(); x.rect(0, 0, W, WIN_T); x.rect(0, WIN_B, W, H - WIN_B); x.clip();
+    if (fog.complete && fog.naturalWidth) x.drawImage(fog, 0, 0, W, H); else { x.fillStyle = "#1a0f2a"; x.fillRect(0, 0, W, H); }
+    let g = x.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, "rgba(10,6,18,.55)"); g.addColorStop(.3, "rgba(10,6,18,.25)"); g.addColorStop(.7, "rgba(10,6,18,.35)"); g.addColorStop(1, "rgba(10,6,18,.8)");
+    x.fillStyle = g; x.fillRect(0, 0, W, H);
+    const glow = x.createRadialGradient(W / 2, 430, 20, W / 2, 430, 520);
+    glow.addColorStop(0, "rgba(130,5,179,.35)"); glow.addColorStop(1, "rgba(130,5,179,0)");
+    x.fillStyle = glow; x.fillRect(0, 0, W, WIN_T);
+    x.restore();
+
+    // 2) glowing edges of the window
+    const edge = x.createLinearGradient(0, 0, W, 0);
+    edge.addColorStop(0, "rgba(233,201,139,0)"); edge.addColorStop(.2, "#E9C98B"); edge.addColorStop(.55, "#BE0078"); edge.addColorStop(.85, "#36D6E7"); edge.addColorStop(1, "rgba(54,214,231,0)");
+    x.save(); x.shadowColor = "rgba(190,0,120,.9)"; x.shadowBlur = 18; x.fillStyle = edge;
+    x.fillRect(0, WIN_T - 3, W, 3); x.fillRect(0, WIN_B, W, 3); x.restore();
+
+    // 3) series tag + game chip
+    x.textAlign = "center"; x.textBaseline = "alphabetic";
+    if (crystal.complete && crystal.naturalWidth) {
+      const ch = 70, cw = ch * crystal.naturalWidth / crystal.naturalHeight;
+      x.save(); x.shadowColor = "rgba(190,0,120,.8)"; x.shadowBlur = 20; x.drawImage(crystal, W / 2 - cw / 2, 150, cw, ch); x.restore();
+    }
+    x.font = '600 26px "MDR Semi"'; x.letterSpacing = "8px"; x.fillStyle = "#D9B7F2";
+    x.fillText("MADOROMI · LORE", W / 2 + 4, 262);
+    const game = $("game").value.trim().toUpperCase();
+    if (game) {
+      x.font = '600 24px "MDR Semi"'; x.letterSpacing = "4px";
+      const w = x.measureText(game).width + 44, px = W / 2 - w / 2, py = 286;
+      x.fillStyle = "rgba(20,14,31,.8)"; rr(px, py, w, 46, 23); x.fill();
+      x.strokeStyle = "rgba(233,201,139,.75)"; x.lineWidth = 2; rr(px, py, w, 46, 23); x.stroke();
+      x.fillStyle = "#E9C98B"; x.fillText(game, W / 2 + 2, py + 32);
+    }
+    x.letterSpacing = "0px";
+
+    // 4) hook lines
+    const lines = [[$("l1").value.trim().toUpperCase(), "gold"], [$("l2").value.trim().toUpperCase(), "brand"]].filter(l => l[0]);
+    let size = +$("size").value; $("sizeVal").textContent = size;
+    x.font = `900 ${size}px "MDR Black"`;
+    while (size > 44 && lines.some(l => x.measureText(l[0]).width > 980)) { size -= 2; x.font = `900 ${size}px "MDR Black"`; }
+    const block = lines.length * size * 1.04;
+    let y = 380 + (WIN_T - 40 - 380 - block) / 2 + size * .82;
+    lines.forEach(([t, style]) => {
+      x.save(); x.lineJoin = "round"; x.lineWidth = size * .1; x.strokeStyle = "rgba(10,6,18,.95)";
+      x.shadowColor = "rgba(0,0,0,.6)"; x.shadowBlur = 20; x.shadowOffsetY = 6; x.strokeText(t, W / 2, y);
+      x.shadowColor = style === "gold" ? "rgba(233,201,139,.35)" : "rgba(190,0,120,.65)"; x.shadowBlur = 26; x.shadowOffsetY = 0;
+      if (style === "gold") { const gg = x.createLinearGradient(0, y - size * .8, 0, y); gg.addColorStop(0, "#FFF6E6"); gg.addColorStop(.55, "#E9C98B"); gg.addColorStop(1, "#B98A4E"); x.fillStyle = gg; }
+      else { const w = x.measureText(t).width, x0 = W / 2 - w / 2, gg = x.createLinearGradient(x0, 0, x0 + w, 0); gg.addColorStop(0, "#FF3FAE"); gg.addColorStop(.5, "#B04BFF"); gg.addColorStop(1, "#5FEAF7"); x.fillStyle = gg; }
+      x.fillText(t, W / 2, y); x.restore(); y += size * 1.04;
+    });
+
+    // 5) handle under the window
+    if ($("handle").checked) {
+      x.font = '600 28px "MDR Semi"'; x.letterSpacing = "3px"; x.fillStyle = "rgba(242,238,248,.75)";
+      x.fillText("@madoromitv", W / 2, WIN_B + 62); x.letterSpacing = "0px";
+    }
+  }
+  function rr(px, py, w, h, r) { x.beginPath(); x.moveTo(px + r, py); x.arcTo(px + w, py, px + w, py + h, r); x.arcTo(px + w, py + h, px, py + h, r); x.arcTo(px, py + h, px, py, r); x.arcTo(px, py, px + w, py, r); x.closePath(); }
+
+  $("dl").onclick = () => {
+    const a = document.createElement("a");
+    const name = ($("l1").value + " " + $("l2").value).trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "frame";
+    a.download = `madoromi-short-${name}.png`; a.href = c.toDataURL("image/png"); a.click();
+  };
+  document.querySelectorAll("input").forEach(el => el.addEventListener("input", draw));
+  fog.onload = crystal.onload = draw;
+  Promise.all([document.fonts.load('900 100px "MDR Black"'), document.fonts.load('600 20px "MDR Semi"')]).then(draw, draw);
+  draw();
+})();
+</script>
+</body>
+</html>
