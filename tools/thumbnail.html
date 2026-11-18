@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MadoromiTV · thumbnail maker</title>
+<style>
+  @font-face { font-family: "MDR Black"; src: url("../assets/lore/fonts/Inter-Black.otf"); }
+  @font-face { font-family: "MDR Semi"; src: url("../assets/lore/fonts/Inter-SemiBold.otf"); }
+  @font-face { font-family: "MDR Serif"; src: url("../assets/lore/fonts/GFSBaskerville.otf"); }
+  :root { --night:#0B0812; --text:#F2EEF8; --dim:rgba(242,238,248,.6); --edge:rgba(242,238,248,.12); }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--night); color:var(--text); font-family:"Segoe UI", system-ui, sans-serif; }
+  main { display:grid; grid-template-columns: 360px 1fr; gap:32px; padding:32px; max-width:1400px; margin:auto; }
+  h1 { font-weight:300; letter-spacing:.2em; text-transform:uppercase; font-size:20px; margin:0 0 24px; }
+  label { display:block; font-size:13px; color:var(--dim); margin:16px 0 6px; letter-spacing:.06em; }
+  input[type=text], select { width:100%; padding:10px 12px; border-radius:10px; border:1px solid var(--edge);
+    background:rgba(20,14,31,.8); color:var(--text); font:16px "Segoe UI", system-ui, sans-serif; }
+  input[type=range] { width:100%; }
+  .row { display:flex; gap:10px; align-items:center; margin-top:8px; font-size:14px; }
+  .drop { margin-top:6px; padding:18px; border:1px dashed rgba(242,238,248,.25); border-radius:12px; text-align:center; font-size:14px; color:var(--dim); cursor:pointer; }
+  .drop.over { border-color:#BE0078; color:var(--text); }
+  button { margin-top:22px; width:100%; padding:12px; border:0; border-radius:999px; cursor:pointer;
+    font:600 15px "Segoe UI", system-ui, sans-serif; color:#fff; background:linear-gradient(90deg,#BE0078,#8205B3 50%,#36D6E7); }
+  button.alt { margin-top:10px; background:rgba(242,238,248,.08); box-shadow: inset 0 0 0 1px var(--edge); }
+  .hint { font-size:12px; color:var(--dim); margin-top:14px; line-height:1.5; }
+  .preview { align-self:start; background:#1a1324; border:1px solid var(--edge); border-radius:14px; padding:12px; }
+  canvas { display:block; width:100%; max-width:960px; aspect-ratio:16/9; border-radius:8px; }
+  .small { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  @media (max-width: 900px) { main { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<main>
+  <section>
+    <h1>thumbnail maker</h1>
+    <label>Screenshot / artwork</label>
+    <div class="drop" id="drop">Drop an image here, or click to choose</div>
+    <input type="file" id="file" accept="image/*" hidden>
+    <label for="focus">Image focus (left ↔ right): <span id="focusVal">50</span>%</label>
+    <input id="focus" type="range" min="0" max="100" value="50">
+    <label for="zoom">Image zoom: <span id="zoomVal">100</span>%</label>
+    <input id="zoom" type="range" min="100" max="200" value="100">
+
+    <label for="l1">Big text, line 1 (2–4 words is ideal)</label>
+    <input id="l1" type="text" value="WHO IS">
+    <label for="l2">Big text, line 2 (shown in the brand gradient)</label>
+    <input id="l2" type="text" value="KUJA?">
+    <div class="small">
+      <div><label for="game">Game tag</label><input id="game" type="text" value="FINAL FANTASY IX"></div>
+      <div><label for="ep">Episode (optional)</label><input id="ep" type="text" value="#1"></div>
+    </div>
+    <div class="small">
+      <div><label for="side">Text side</label><select id="side"><option value="left">Left</option><option value="right">Right</option></select></div>
+      <div><label for="size">Text size</label><input id="size" type="range" min="90" max="190" value="150"></div>
+    </div>
+    <div class="row"><input id="ring" type="checkbox" checked> <span>rune ring + crystal</span></div>
+    <div class="row"><input id="grade" type="checkbox" checked> <span>MadoromiTV colour grade</span></div>
+
+    <button id="dlj">Download JPG (for YouTube)</button>
+    <button id="dlp" class="alt">Download PNG</button>
+    <p class="hint">1280 × 720, the size YouTube recommends. The JPG stays under YouTube's 2 MB limit.
+    Keep the big text short: on phones, thumbnails are about the size of a stamp.</p>
+  </section>
+  <div class="preview"><canvas id="c" width="1280" height="720"></canvas></div>
+</main>
+<script>
+(function () {
+  const W = 1280, H = 720;
+  const c = document.getElementById("c"), x = c.getContext("2d");
+  const $ = (id) => document.getElementById(id);
+  let img = null;
+  const crystal = new Image(); crystal.src = "../assets/lore/crystal-still.png";
+  const ringImg = new Image(); ringImg.src = "../assets/lore/rune-ring.png";
+
+  function load(file) {
+    if (!file || !file.type.startsWith("image/")) return;
+    const r = new FileReader();
+    r.onload = () => { const i = new Image(); i.onload = () => { img = i; draw(); }; i.src = r.result; };
+    r.readAsDataURL(file);
+  }
+  const drop = $("drop");
+  drop.onclick = () => $("file").click();
+  $("file").onchange = (e) => load(e.target.files[0]);
+  ["dragenter", "dragover"].forEach(ev => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.add("over"); }));
+  ["dragleave", "drop"].forEach(ev => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.remove("over"); }));
+  drop.addEventListener("drop", (e) => load(e.dataTransfer.files[0]));
+  document.addEventListener("paste", (e) => { const it = [...(e.clipboardData || {}).items || []].find(i => i.type.startsWith("image/")); if (it) load(it.getAsFile()); });
+
+  function gradText(y0, y1, stops) { const g = x.createLinearGradient(0, y0, 0, y1); stops.forEach(s => g.addColorStop(s[0], s[1])); return g; }
+
+  function draw() {
+    const left = $("side").value === "left";
+    $("focusVal").textContent = $("focus").value; $("zoomVal").textContent = $("zoom").value;
+    x.clearRect(0, 0, W, H);
+
+    // 1) background
+    if (img) {
+      const z = $("zoom").value / 100, s = Math.max(W / img.width, H / img.height) * z;
+      const dw = img.width * s, dh = img.height * s, fx = $("focus").value / 100;
+      x.drawImage(img, (W - dw) * fx, (H - dh) / 2, dw, dh);
+    } else {
+      const g = x.createRadialGradient(W * .6, H * .45, 40, W * .6, H * .45, 900);
+      g.addColorStop(0, "#3a1257"); g.addColorStop(.5, "#1c0d2e"); g.addColorStop(1, "#0b0812");
+      x.fillStyle = g; x.fillRect(0, 0, W, H);
+    }
+    // 2) colour grade: violet shadows, magenta/cyan tint
+    if ($("grade").checked) {
+      x.save(); x.globalCompositeOperation = "soft-light";
+      const g = x.createLinearGradient(0, 0, W, H); g.addColorStop(0, "rgba(190,0,120,.55)"); g.addColorStop(.5, "rgba(130,5,179,.45)"); g.addColorStop(1, "rgba(54,214,231,.45)");
+      x.fillStyle = g; x.fillRect(0, 0, W, H); x.restore();
+    }
+    // 3) darken the text side
+    const sideG = x.createLinearGradient(left ? 0 : W, 0, left ? W * .72 : W * .28, 0);
+    sideG.addColorStop(0, "rgba(10,6,18,.92)"); sideG.addColorStop(.55, "rgba(10,6,18,.55)"); sideG.addColorStop(1, "rgba(10,6,18,0)");
+    x.fillStyle = sideG; x.fillRect(0, 0, W, H);
+    const vig = x.createRadialGradient(W / 2, H / 2, H * .35, W / 2, H / 2, W * .75);
+    vig.addColorStop(0, "rgba(6,4,12,0)"); vig.addColorStop(1, "rgba(6,4,12,.7)");
+    x.fillStyle = vig; x.fillRect(0, 0, W, H);
+
+    // 4) rune ring + crystal in the text-side corner
+    const cx = left ? 150 : W - 150, cy = 140;
+    if ($("ring").checked && ringImg.complete && ringImg.naturalWidth) {
+      x.save(); x.globalAlpha = .55; x.translate(cx, cy); x.rotate(-.2); x.drawImage(ringImg, -170, -170, 340, 340); x.restore();
+    }
+    if ($("ring").checked && crystal.complete && crystal.naturalWidth) {
+      const ch = 150, cw = ch * crystal.naturalWidth / crystal.naturalHeight;
+      x.save(); x.shadowColor = "rgba(190,0,120,.8)"; x.shadowBlur = 30; x.drawImage(crystal, cx - cw / 2, cy - ch * .48, cw, ch); x.restore();
+    }
+
+    // 5) text block
+    const pad = 70, tx = left ? pad : W - pad;
+    x.textAlign = left ? "left" : "right"; x.textBaseline = "alphabetic";
+    const maxW = W * .58;
+    // series label + game pill
+    x.font = '600 22px "MDR Semi"'; x.letterSpacing = "6px";
+    let y = 300;
+    const series = "MADOROMI · LORE";
+    x.fillStyle = "#D9B7F2"; x.fillText(series, tx, y);
+    const game = $("game").value.trim().toUpperCase(), ep = $("ep").value.trim();
+    if (game || ep) {
+      const label = [game, ep].filter(Boolean).join("  ·  ");
+      x.font = '600 20px "MDR Semi"'; x.letterSpacing = "3px";
+      const w = x.measureText(label).width + 36, px = left ? tx : tx - w, py = y + 18;
+      x.fillStyle = "rgba(20,14,31,.78)"; roundRect(px, py, w, 40, 20); x.fill();
+      x.strokeStyle = "rgba(233,201,139,.7)"; x.lineWidth = 1.5; roundRect(px, py, w, 40, 20); x.stroke();
+      x.fillStyle = "#E9C98B"; x.textAlign = "left"; x.fillText(label, px + 18, py + 27); x.textAlign = left ? "left" : "right";
+      y = py + 40;
+    }
+    x.letterSpacing = "0px";
+    // big lines
+    const lines = [[$("l1").value.trim().toUpperCase(), "gold"], [$("l2").value.trim().toUpperCase(), "brand"]].filter(l => l[0]);
+    let size = +$("size").value;
+    x.font = `900 ${size}px "MDR Black"`;
+    while (size > 60 && lines.some(l => x.measureText(l[0]).width > maxW)) { size -= 4; x.font = `900 ${size}px "MDR Black"`; }
+    y += size * 1.0 + 10;
+    lines.forEach(([t, style]) => {
+      x.save();
+      x.lineJoin = "round"; x.lineWidth = size * .09; x.strokeStyle = "rgba(10,6,18,.95)";
+      x.shadowColor = "rgba(0,0,0,.6)"; x.shadowBlur = 24; x.shadowOffsetY = 6;
+      x.strokeText(t, tx, y);
+      x.shadowColor = style === "gold" ? "rgba(233,201,139,.35)" : "rgba(190,0,120,.65)"; x.shadowBlur = 30; x.shadowOffsetY = 0;
+      if (style === "gold") x.fillStyle = gradText(y - size * .8, y, [[0, "#FFF6E6"], [.55, "#E9C98B"], [1, "#B98A4E"]]);
+      else {
+        const w = x.measureText(t).width, x0 = left ? tx : tx - w;
+        const g = x.createLinearGradient(x0, 0, x0 + w, 0); g.addColorStop(0, "#FF3FAE"); g.addColorStop(.5, "#B04BFF"); g.addColorStop(1, "#5FEAF7");
+        x.fillStyle = g;
+      }
+      x.fillText(t, tx, y);
+      x.restore();
+      y += size * 1.02;
+    });
+
+    // 6) thin brand frame
+    const fg = x.createLinearGradient(0, 0, W, H); fg.addColorStop(0, "#E9C98B"); fg.addColorStop(.5, "#BE0078"); fg.addColorStop(1, "#36D6E7");
+    x.strokeStyle = fg; x.lineWidth = 6; x.globalAlpha = .9; x.strokeRect(3, 3, W - 6, H - 6); x.globalAlpha = 1;
+  }
+  function roundRect(px, py, w, h, r) { x.beginPath(); x.moveTo(px + r, py); x.arcTo(px + w, py, px + w, py + h, r); x.arcTo(px + w, py + h, px, py + h, r); x.arcTo(px, py + h, px, py, r); x.arcTo(px, py, px + w, py, r); x.closePath(); }
+
+  function download(type) {
+    const a = document.createElement("a");
+    const name = ($("l1").value + " " + $("l2").value).trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "thumbnail";
+    a.download = `madoromi-${name}.${type === "image/jpeg" ? "jpg" : "png"}`;
+    a.href = c.toDataURL(type, .92); a.click();
+  }
+  $("dlj").onclick = () => download("image/jpeg");
+  $("dlp").onclick = () => download("image/png");
+  document.querySelectorAll("input, select").forEach(el => el.addEventListener("input", draw));
+  crystal.onload = ringImg.onload = draw;
+  Promise.all([document.fonts.load('900 100px "MDR Black"'), document.fonts.load('600 20px "MDR Semi"')]).then(draw, draw);
+  draw();
+})();
+</script>
+</body>
+</html>
